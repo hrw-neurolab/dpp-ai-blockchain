@@ -4,6 +4,7 @@ import json
 
 from llm_mapping import LlmMapping
 from WavesConnector import MetricCaller
+from study.evaluation import evaluate_direct_mapping, evaluate_mapping_function
 
 
 class RunPipeline:
@@ -67,9 +68,8 @@ class RunPipeline:
         tx = self.metric_caller.call_store_metrics(machine_id, data)
         self.metric_caller.wait_for_transaction(tx)
 
-
     def __run_direct_mapping(self):
-    
+
         reference_machine_id = list(self.source_data.keys())[0]
         total_days = len(self.source_data[reference_machine_id])
 
@@ -77,40 +77,37 @@ class RunPipeline:
             current_date = None
 
             for machine_id in self.source_data.keys():
-                machine_file_path = os.path.join(self.run_dir, f"{machine_id}_result.jsonl")
+                machine_file_path = os.path.join(
+                    self.run_dir, f"{machine_id}_result.jsonl"
+                )
 
                 source = self.source_data[machine_id][day_index]
                 target = self.target_data[machine_id][day_index]
+                result = {"source": source, "target": target}
 
                 sample_time_start = time.time()
-                result = {"source": source, "target": target}
 
                 mapping_result = self.llm_mapping(source)
                 result["llm_mapping"] = mapping_result
-                print(mapping_result)
 
                 parsed = mapping_result.get("response_parsed", None)
 
                 if current_date is None and "date" in source:
                     current_date = source["date"]
 
-
                 if parsed is not None:
                     blockchain_time_start = time.time()
                     self.__push_to_blockchain(machine_id, parsed)
                     result["blockchain_time"] = time.time() - blockchain_time_start
 
-                    result["total_time"] = time.time() - sample_time_start
+                result["total_time"] = time.time() - sample_time_start
 
-                    with open(machine_file_path, "a") as f:
-                      f.write(json.dumps(result) + "\n")
-
+                with open(machine_file_path, "a") as f:
+                    f.write(json.dumps(result) + "\n")
 
             if current_date is not None:
                 print(f"Calling aggregate_metrics for {current_date}")
                 self.metric_caller.call_aggregate_metrics(current_date)
-            
-
 
     def __run_function_mapping(self):
         for machine_id in self.source_data.keys():

@@ -1,5 +1,6 @@
 import re
 
+
 class RideMachineAddressUpdater:
     def __init__(self, ride_file_path: str):
         self.ride_file_path = ride_file_path
@@ -21,7 +22,9 @@ class RideMachineAddressUpdater:
             lines = f.readlines()
 
         new_lines = []
-        machine_line_pattern = re.compile(r"let machine\d+_address = Address\(base58'[A-Za-z0-9]+'\)")
+        machine_line_pattern = re.compile(
+            r"let machine\d+_address = Address\(base58'[A-Za-z0-9]+'\)"
+        )
         machine_idx = 0
 
         for line in lines:
@@ -36,4 +39,3 @@ class RideMachineAddressUpdater:
                 f.writelines(new_lines)
         else:
             print("".join(new_lines))
-
