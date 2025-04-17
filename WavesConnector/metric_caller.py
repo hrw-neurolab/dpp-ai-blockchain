@@ -7,7 +7,7 @@ import os
 import requests
 
 class MetricCaller:
-    def __init__(self, json_path='wavesConnector/waves_addresses.json'):
+    def __init__(self, json_path='WavesConnector/waves_addresses.json'):
         load_dotenv()
         seed = os.getenv("SEED")
         self.node_url = 'https://nodes-testnet.wavesnodes.com'
