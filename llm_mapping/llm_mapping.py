@@ -1,5 +1,4 @@
 import time
-import json
 from typing import Literal
 
 from langchain_openai import ChatOpenAI
@@ -14,14 +13,14 @@ from llm_mapping.prompts.mapping_function import PROMPT as MAPPING_FUNCTION_PROM
 class LlmMapping:
     def __init__(
         self,
-        provider: Literal["gpt", "ollama"],
+        provider: Literal["openai", "ollama"],
         model_name: str,
         prompt_type: Literal["few_shot", "schema_driven", "mapping_function"],
     ):
         """Initialize the LLM mapping class.
 
         Args:
-            provider ("gpt" | "ollama"): The provider for the language model.
+            provider ("openai" | "ollama"): The provider for the language model.
             model_name (str): The model to use for evaluation.
             prompt_type ("few_shot" | "schema_driven" | "mapping_function"): The type of prompt to use.
         """
@@ -38,7 +37,7 @@ class LlmMapping:
         Returns:
             An instance of the appropriate LLM class.
         """
-        if provider == "gpt":
+        if provider == "openai":
             self.llm = ChatOpenAI(
                 model=model_name,
                 temperature=0,

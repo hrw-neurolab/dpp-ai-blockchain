@@ -27,7 +27,7 @@ if __name__ == "__main__":
         "--model-provider",
         type=str,
         required=True,
-        choices=["gpt", "ollama"],
+        choices=["openai", "ollama"],
         help="The provider of the LLM model to use for evaluation.",
     )
     parser.add_argument(
