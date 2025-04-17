@@ -1,0 +1,222 @@
+import time
+import json
+from typing import Literal
+
+from langchain_openai import ChatOpenAI
+from langchain_ollama import ChatOllama
+
+from llm_mapping.target_model import OUTPUT_PARSER
+from llm_mapping.prompts.schema_driven import PROMPT as SCHEMA_DRIVEN_PROMPT
+from llm_mapping.prompts.few_shot import PROMPT as FEW_SHOT_PROMPT
+from llm_mapping.prompts.mapping_function import PROMPT as MAPPING_FUNCTION_PROMPT
+
+
+class LlmMapping:
+    def __init__(
+        self,
+        provider: Literal["gpt", "ollama"],
+        model_name: str,
+        prompt_type: Literal["few_shot", "schema_driven", "mapping_function"],
+    ):
+        """Initialize the LLM mapping class.
+
+        Args:
+            provider ("gpt" | "ollama"): The provider for the language model.
+            model_name (str): The model to use for evaluation.
+            prompt_type ("few_shot" | "schema_driven" | "mapping_function"): The type of prompt to use.
+        """
+        self.__init_llm(provider, model_name)
+        self.__init_prompt(prompt_type)
+
+    def __init_llm(self, provider: str, model_name: str):
+        """Initialize the LLM based on the provider and model name.
+
+        Args:
+            provider (str): The provider for the language model.
+            model_name (str): The model to use for evaluation.
+
+        Returns:
+            An instance of the appropriate LLM class.
+        """
+        if provider == "gpt":
+            self.llm = ChatOpenAI(
+                model=model_name,
+                temperature=0,
+                timeout=None,
+                max_retries=2,
+            )
+        elif provider == "ollama":
+            self.llm = ChatOllama(
+                model=model_name,
+                temperature=0,
+            )
+        else:
+            raise ValueError(
+                f"Invalid model type: {model_name}. Supported models are 'gpt' and 'ollama'."
+            )
+
+    def __init_prompt(self, prompt_type: str):
+        """Initialize the prompt based on the provided type.
+
+        Args:
+            prompt (str): The type of prompt to use.
+
+        Returns:
+            An instance of the appropriate prompt class.
+        """
+        self.prompt_type = prompt_type
+
+        if prompt_type == "few_shot":
+            self.prompt = FEW_SHOT_PROMPT
+        elif prompt_type == "schema_driven":
+            self.prompt = SCHEMA_DRIVEN_PROMPT
+        elif prompt_type == "mapping_function":
+            self.prompt = MAPPING_FUNCTION_PROMPT
+        else:
+            raise ValueError(
+                f"Invalid prompt type: {prompt_type}. Supported types are 'few_shot', 'schema_driven', and 'mapping_function'."
+            )
+
+    def __process_direct_mapping(self, source: dict):
+        """Map a sample directly using the LLM and the provided prompt.
+
+        Args:
+            source (dict): The source data to evaluate.
+
+        Returns:
+            A dictionary containing the evaluation results.
+        """
+
+        chain = self.prompt | self.llm
+
+        result = {
+            "llm_time": None,
+            "response_raw": None,
+            "response_parsed": None,
+            "error": False,
+            "error_msg": None,
+            "error_type": None,
+        }
+
+        start_time = time.time()
+
+        try:
+            response = chain.invoke(source)
+
+        except Exception as e:
+            result["error"] = True
+            result["error_msg"] = str(e)
+            result["error_type"] = "LLM_CALL_EXCEPTION"
+            return result
+
+        result["llm_time"] = time.time() - start_time
+        result["response_raw"] = response.text()
+
+        try:
+            parsed = OUTPUT_PARSER.invoke(response)
+            result["response_parsed"] = parsed.model_dump()
+
+        except Exception as e:
+            result["error"] = True
+            result["error_msg"] = str(e)
+            result["error_type"] = "PARSING_EXCEPTION"
+
+        return result
+
+    def __process_mapping_function(self, source: dict):
+        """Generate and execute a mapping function to transform the source data into the target format.
+
+        Args:
+            source (dict): The source data to evaluate.
+
+        Returns:
+            A dictionary containing the results.
+        """
+
+        chain = MAPPING_FUNCTION_PROMPT | self.llm
+
+        result = {
+            "llm_time": None,
+            "response_raw": None,
+            "function_result": None,
+            "error": False,
+            "error_msg": None,
+            "error_type": None,
+        }
+
+        start_time = time.time()
+
+        try:
+            response = chain.invoke(source)
+        except Exception as e:
+            result["error"] = True
+            result["error_msg"] = str(e)
+            result["error_type"] = "LLM_CALL_EXCEPTION"
+            return result
+
+        result["llm_time"] = time.time() - start_time
+
+        response_raw = response.text().strip()
+        result["response_raw"] = response_raw
+
+        # Extract the code string from the response
+        if "```python" not in response_raw or not response_raw.endswith("```"):
+            result["error"] = True
+            result["error_msg"] = "No code block found in the response."
+            result["error_type"] = "NO_CODE_BLOCK"
+            return result
+
+        code_str = response_raw.split("```python")[1].split("```")[0].strip()
+
+        # Execute the code string to get the transform function
+        local_vars = {}
+        exec(code_str, {}, local_vars)
+        map_raw_to_standard = local_vars.get("map_raw_to_standard", None)
+
+        if map_raw_to_standard is None:
+            result["error"] = True
+            result["error_msg"] = (
+                "map_raw_to_standard function not found in the response."
+            )
+            result["error_type"] = "FUNCTION_NOT_FOUND"
+            return result
+
+        if not callable(map_raw_to_standard):
+            result["error"] = True
+            result["error_msg"] = (
+                "map_raw_to_standard function not found in the response."
+            )
+            result["error_type"] = "FUNCTION_NOT_CALLABLE"
+            return result
+
+        # Call the function with the source data
+        try:
+            output = map_raw_to_standard(source)
+        except Exception as e:
+            result["error"] = True
+            result["error_msg"] = str(e)
+            result["error_type"] = "FUNCTION_EXECUTION_EXCEPTION"
+            return result
+
+        result["function_result"] = output
+
+        if not type(output) == dict:
+            result["error"] = True
+            result["error_msg"] = "Function did not return a dictionary."
+            result["error_type"] = "FUNCTION_RETURN_TYPE"
+
+        return result
+
+    def __call__(self, source: dict):
+        """Process a sample using the selected prompt type.
+
+        Args:
+            source (dict): The source data to process.
+
+        Returns:
+            A dictionary containing the results.
+        """
+        if self.prompt_type == "mapping_function":
+            return self.__process_mapping_function(source)
+
+        return self.__process_direct_mapping(source)

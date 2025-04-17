@@ -1,0 +1,37 @@
+{
+    "product_id": "M001",
+    "manufacturer": "Beispiel GmbH",
+    "model": "XY-1000",
+    "manufacture_date": "2020-01-01",
+    "operation_data": [
+      {
+        "date": "2020-01-01",
+        "operation_hours": 8,
+        "energy_consumption_kWh": 320,
+        "material_used_kg": 500,
+        "material_waste_kg": 50,
+        "CO2_emissions_kg": 200,
+        "water_consumption_liters": 1000,
+        "water_recycled_liters": 200,
+        "product_output_units": 450
+      }
+    ],
+    "sustainability_summary": {
+      "average_energy_consumption_kWh": 300,
+      "total_CO2_emissions_kg": 2000,
+      "total_water_consumption_liters": 10000,
+      "total_water_recycled_liters": 2000
+    },
+  "lifecycle_metrics": {
+    "first_operation_date": "2020-01-01",
+    "last_operation_date": "2025-03-30",
+    "days_in_operation": 1120,
+    "total_operating_hours": 320
+  },
+    "recyclability": "75%",
+    "maintenance_guidelines": "Alle 6 Monate prüfen",
+    "end_of_life": {
+      "recycling_instructions": "Zerlegung nach Anleitung XYZ.pdf",
+      "take_back_program": true
+    }
+  }

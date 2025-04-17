@@ -1,0 +1,145 @@
+{-# STDLIB_VERSION 6 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+func removeMarks (s: String) = {
+    let a = drop(s, 2)
+    let b = dropRight(a, 1)
+    b
+}
+
+func calculateTotalWaterConsumption(liters: Int) = {
+    let key = toString(this) + "_total_water_consumption_liters" 
+    let searchForExistingData = match getInteger(key) {
+    case s: Int => 
+    s 
+    case _ => 
+    0
+  }
+searchForExistingData + liters
+}
+
+func calculateTotalWaterRecycled(liters: Int) = {
+    let key = toString(this) + "_total_water_recycled_liters" 
+    let searchForExistingData = match getInteger(key) {
+    case s: Int => 
+    s 
+    case _ => 
+    0
+  }
+searchForExistingData + liters
+}
+
+func calculateTotalCO2Emissions(emissions: Int) = {
+    let key = toString(this) + "_total_water_CO2_emissions_kg" 
+    let searchForExistingData = match getInteger(key) {
+    case s: Int => 
+    s 
+    case _ => 
+    0
+  }
+searchForExistingData + emissions
+}
+
+func calculateDaysInOperation() = {
+    let key = toString(this) + "_days_in_operation" 
+    let searchForExistingData = match getInteger(key) {
+    case s: Int => 
+    s 
+    case _ => 
+    0
+  }
+  searchForExistingData + 1
+}
+
+func parseJson (json: String) = {
+    let withoutBraces = dropRight(drop(json, 1), 1)
+    let entries = split(withoutBraces, ",")
+
+    let kv0 = split(entries[0], ":")
+    let k0 = removeMarks(kv0[0])
+    let v0 = removeMarks(kv0[1])
+
+    let kv1 = split(entries[1], ":")
+    let k1 = removeMarks(kv1[0])
+    let v1 = removeMarks(kv1[1])
+
+    let kv2 = split(entries[2], ":")
+    let k2 = removeMarks(kv2[0])
+    let v2 = removeMarks(kv2[1])
+
+    let kv3 = split(entries[3], ":")
+    let k3 = removeMarks(kv3[0])
+    let v3 = removeMarks(kv3[1])
+
+    let kv4 = split(entries[4], ":")
+    let k4 = removeMarks(kv4[0])
+    let v4 = removeMarks(kv4[1])
+
+    let kv5 = split(entries[5], ":")
+    let k5 = removeMarks(kv5[0])
+    let v5 = removeMarks(kv5[1])
+
+    let kv6 = split(entries[6], ":")
+    let k6 = removeMarks(kv6[0])
+    let v6 = removeMarks(kv6[1])
+
+    let kv7 = split(entries[7], ":")
+    let k7 = removeMarks(kv7[0])
+    let v7 = removeMarks(kv7[1])
+
+    let kv8 = split(entries[8], ":")
+    let k8 = removeMarks(kv8[0])
+    let v8 = dropRight(removeMarks(kv8[1]), 2)
+
+    (
+      [k0, v0],
+      [k1, v1],
+      [k2, v2],
+      [k3, v3],
+      [k4, v4],
+      [k5, v5],
+      [k6, v6],
+      [k7, v7],
+      [k8, v8]
+    )
+}
+
+@Callable(i)
+func storeMetrics(jsonStr: String) = {
+    let parsed = parseJson(jsonStr)
+    let address = toString(this)
+
+    let date = parsed._1[1]
+    let operationHours = parseIntValue(parsed._2[1])
+    let energyConsumption = parseIntValue(parsed._3[1])
+    let material_used_kg =  parseIntValue(parsed._4[1])
+    let material_waste_kg = parseIntValue(parsed._5[1])
+    let Co2_emissions_kg = parseIntValue(parsed._6[1])
+    let water_comsumption_liters = parseIntValue(parsed._7[1])
+    let water_receycled_liters = parseIntValue(parsed._8[1])
+    let product_output_units = parseIntValue(parsed._9[1])
+
+    let totalWaterConsumption = calculateTotalWaterConsumption(water_comsumption_liters)
+    let totalDaysInOperation = calculateDaysInOperation()
+    let totalCO2 = calculateTotalCO2Emissions(Co2_emissions_kg)
+    let totalWaterRecycled = calculateTotalWaterRecycled(water_receycled_liters)
+
+    [
+      StringEntry(address + "_" + date, date),
+      IntegerEntry(address + "_" + date + "_operation_hours", operationHours),
+      IntegerEntry(address + "_" + date + "_energy_consumption_kWh", energyConsumption),
+      IntegerEntry(address + "_" + date + "_material_used_kg", material_used_kg),
+      IntegerEntry(address + "_" + date + "_material_waste_kg", material_waste_kg),
+      IntegerEntry(address + "_" + date + "_CO2_emissions_kg", Co2_emissions_kg),
+      IntegerEntry(address + "_" + date + "_water_consumption_liters", water_comsumption_liters),
+      IntegerEntry(address + "_" + date + "_water_recycled_liters", water_receycled_liters),
+      IntegerEntry(address + "_" + date + "_product_output_units", product_output_units),
+      IntegerEntry(address + "_total_water_consumption_liters", totalWaterConsumption),
+      IntegerEntry(address + "_days_in_operation", totalDaysInOperation),
+      IntegerEntry(address + "_total_water_recycled_liters", totalWaterRecycled),
+      IntegerEntry(address + "_total_water_CO2_emissions_kg", totalCO2)
+
+    ]
+}
+

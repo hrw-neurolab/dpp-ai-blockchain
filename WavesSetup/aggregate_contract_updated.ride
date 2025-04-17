@@ -1,0 +1,179 @@
+{-# STDLIB_VERSION 6 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+let machine1_address = Address(base58'3NCCCJXXoMRkcN7xYBrpQuQWQJJA8i1Dcmt')
+let machine2_address = Address(base58'3N3euuhUpbjVhg71jSDCNkVECYh6vx31r2R')
+let machine3_address = Address(base58'3N7ohxSHam7QFtvxDTgBJv53PbWv5nympuY')
+let machine4_address = Address(base58'3MsaWJNJDuLi8qLs5Q3RiZKvD9JkULLjR9D')
+let machine5_address = Address(base58'3MuPkpJFFsit7aUsKiaekcZp8FJr9kFd2CJ')
+let machine6_address = Address(base58'3MxjGbBCAbpoPxaNfugyUaA11BcFKixY5L4')
+let machine7_address = Address(base58'3N3vp6nexwfVMk77YUxG9NLsrFopkP1mzvD')
+let machine8_address = Address(base58'3N9AAtf5bW8QNbKbcVetFeDK76uJWbMeNKB')
+let machine9_address = Address(base58'3MtS8qYBeTvW3Mb35QTS3YaBzQEfPWFLMjL')
+let machine10_address = Address(base58'3Mv6M95Fgj5r6Lqa24eV83UMuuqpsPVSjMV')
+
+func energyConsumptionPerDay(address: Address, date: String) = {
+    let key = toString(address) + "_" + date + "_energy_consumption_kWh" 
+    let searchForExistingData = match getInteger(address, key) {
+    case s: Int => 
+    s 
+    case _ => 
+    0
+  }
+searchForExistingData
+}
+
+func materialUsedPerDay(address: Address, date: String) = {
+    let key = toString(address) + "_" + date + "_material_used_kg" 
+    let searchForExistingData = match getInteger(address, key) {
+    case s: Int => 
+    s 
+    case _ => 
+    0
+  }
+searchForExistingData
+}
+
+func materialWastedPerDay(address: Address, date: String) = {
+    let key = toString(address) + "_" + date + "_material_waste_kg" 
+    let searchForExistingData = match getInteger(address, key) {
+    case s: Int => 
+    s 
+    case _ => 
+    0
+  }
+searchForExistingData
+}
+
+func co2EmissionsPerDay(address: Address, date: String) = {
+    let key = toString(address) + "_" + date + "_CO2_emissions_kg" 
+    let searchForExistingData = match getInteger(address, key) {
+    case s: Int => 
+    s 
+    case _ => 
+    0
+  }
+searchForExistingData
+}
+
+func waterConsumptionPerDay(address: Address, date: String) = {
+    let key = toString(address) + "_" + date + "_water_consumption_liters" 
+    let searchForExistingData = match getInteger(address, key) {
+    case s: Int => 
+    s 
+    case _ => 
+    0
+  }
+searchForExistingData
+}
+
+func waterRecycledPerDay(address: Address, date: String) = {
+    let key = toString(address) + "_" + date + "_water_recycled_liters" 
+    let searchForExistingData = match getInteger(address, key) {
+    case s: Int => 
+    s 
+    case _ => 
+    0
+  }
+searchForExistingData
+}
+
+func aggregateMaterialUsed(date: String) = {
+  materialUsedPerDay(machine1_address, date) +
+  materialUsedPerDay(machine2_address, date) +
+  materialUsedPerDay(machine3_address, date) +
+  materialUsedPerDay(machine4_address, date) +
+  materialUsedPerDay(machine5_address, date) +
+  materialUsedPerDay(machine6_address, date) +
+  materialUsedPerDay(machine7_address, date) +
+  materialUsedPerDay(machine8_address, date) +
+  materialUsedPerDay(machine9_address, date) +
+  materialUsedPerDay(machine10_address, date)
+}
+
+func aggregateMaterialWaste(date: String) = {
+  materialWastedPerDay(machine1_address, date) +
+  materialWastedPerDay(machine2_address, date) +
+  materialWastedPerDay(machine3_address, date) +
+  materialWastedPerDay(machine4_address, date) +
+  materialWastedPerDay(machine5_address, date) +
+  materialWastedPerDay(machine6_address, date) +
+  materialWastedPerDay(machine7_address, date) +
+  materialWastedPerDay(machine8_address, date) +
+  materialWastedPerDay(machine9_address, date) +
+  materialWastedPerDay(machine10_address, date)
+}
+
+func aggregateCO2Emissions(date: String) = {
+  co2EmissionsPerDay(machine1_address, date) +
+  co2EmissionsPerDay(machine2_address, date) +
+  co2EmissionsPerDay(machine3_address, date) +
+  co2EmissionsPerDay(machine4_address, date) +
+  co2EmissionsPerDay(machine5_address, date) +
+  co2EmissionsPerDay(machine6_address, date) +
+  co2EmissionsPerDay(machine7_address, date) +
+  co2EmissionsPerDay(machine8_address, date) +
+  co2EmissionsPerDay(machine9_address, date) +
+  co2EmissionsPerDay(machine10_address, date)
+}
+
+func aggregateWaterConsumption(date: String) = {
+  waterConsumptionPerDay(machine1_address, date) +
+  waterConsumptionPerDay(machine2_address, date) +
+  waterConsumptionPerDay(machine3_address, date) +
+  waterConsumptionPerDay(machine4_address, date) +
+  waterConsumptionPerDay(machine5_address, date) +
+  waterConsumptionPerDay(machine6_address, date) +
+  waterConsumptionPerDay(machine7_address, date) +
+  waterConsumptionPerDay(machine8_address, date) +
+  waterConsumptionPerDay(machine9_address, date) +
+  waterConsumptionPerDay(machine10_address, date)
+}
+
+func aggregateWaterRecycled(date: String) = {
+  waterRecycledPerDay(machine1_address, date) +
+  waterRecycledPerDay(machine2_address, date) +
+  waterRecycledPerDay(machine3_address, date) +
+  waterRecycledPerDay(machine4_address, date) +
+  waterRecycledPerDay(machine5_address, date) +
+  waterRecycledPerDay(machine6_address, date) +
+  waterRecycledPerDay(machine7_address, date) +
+  waterRecycledPerDay(machine8_address, date) +
+  waterRecycledPerDay(machine9_address, date) +
+  waterRecycledPerDay(machine10_address, date)
+}
+
+func aggregateEnergyConsumption(date: String) = {
+let machine_1_energyConsumptionPerDay = energyConsumptionPerDay(machine1_address, date)
+let machine_2_energyConsumptionPerDay = energyConsumptionPerDay(machine2_address, date)
+let machine_3_energyConsumptionPerDay = energyConsumptionPerDay(machine3_address, date)
+let machine_4_energyConsumptionPerDay = energyConsumptionPerDay(machine4_address, date)
+let machine_5_energyConsumptionPerDay = energyConsumptionPerDay(machine5_address, date)
+let machine_6_energyConsumptionPerDay = energyConsumptionPerDay(machine6_address, date)
+let machine_7_energyConsumptionPerDay = energyConsumptionPerDay(machine7_address, date)
+let machine_8_energyConsumptionPerDay = energyConsumptionPerDay(machine8_address, date)
+let machine_9_energyConsumptionPerDay = energyConsumptionPerDay(machine9_address, date)
+let machine_10_energyConsumptionPerDay = energyConsumptionPerDay(machine10_address, date)
+
+let aggregatedData = machine_1_energyConsumptionPerDay + machine_2_energyConsumptionPerDay +machine_3_energyConsumptionPerDay +machine_4_energyConsumptionPerDay+machine_5_energyConsumptionPerDay+machine_6_energyConsumptionPerDay+machine_7_energyConsumptionPerDay+machine_8_energyConsumptionPerDay+machine_9_energyConsumptionPerDay+machine_10_energyConsumptionPerDay
+aggregatedData
+}
+
+@Callable(i)
+func aggregateBatchData(date: String) = {
+let aggregatedEnegeryConsumptionPerDay = aggregateEnergyConsumption(date)
+let aggregatedMaterialUsedPerDay = aggregateMaterialUsed(date)
+let aggregatedMaterialWastePerDay = aggregateMaterialWaste(date)
+let aggregatedCO2EmissionsPerDay = aggregateCO2Emissions(date)
+let aggregatedWaterConsumptionPerDay = aggregateWaterConsumption(date)
+let aggregatedWaterRecycledPerDay = aggregateWaterRecycled(date)
+    [
+    IntegerEntry("total_energy_consumption_kWh_" + date, aggregatedEnegeryConsumptionPerDay),
+    IntegerEntry("total_material_used_kg_" + date, aggregatedMaterialUsedPerDay),
+    IntegerEntry("total_material_waste_kg_" + date, aggregatedMaterialWastePerDay),
+    IntegerEntry("total_CO2_emissions_kg_" + date, aggregatedCO2EmissionsPerDay),
+    IntegerEntry("total_water_consumption_liters_" + date, aggregatedWaterConsumptionPerDay),
+    IntegerEntry("total_water_recycled_liters_" + date, aggregatedWaterRecycledPerDay)
+    ]
+}
