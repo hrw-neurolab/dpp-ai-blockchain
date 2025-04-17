@@ -95,12 +95,18 @@ class LlmMapping:
             "error": False,
             "error_msg": None,
             "error_type": None,
+            "input_tokens": None,
+            "output_tokens": None,
+            "total_tokens": None
         }
 
         start_time = time.time()
 
         try:
             response = chain.invoke(source)
+            result["input_tokens"] = response.response_metadata['token_usage']['prompt_tokens']
+            result["output_tokens"] = response.response_metadata['token_usage']['completion_tokens']
+            result["total_tokens"] = response.response_metadata['token_usage']['total_tokens']
 
         except Exception as e:
             result["error"] = True
@@ -141,12 +147,18 @@ class LlmMapping:
             "error": False,
             "error_msg": None,
             "error_type": None,
+            "input_tokens": None,
+            "output_tokens": None,
+            "total_tokens": None
         }
 
         start_time = time.time()
 
         try:
             response = chain.invoke(source)
+            result["input_tokens"] = response.response_metadata['token_usage']['prompt_tokens']
+            result["output_tokens"] = response.response_metadata['token_usage']['completion_tokens']
+            result["total_tokens"] = response.response_metadata['token_usage']['total_tokens']
         except Exception as e:
             result["error"] = True
             result["error_msg"] = str(e)
