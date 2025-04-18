@@ -34,7 +34,7 @@ class MetricCaller:
         stringified_payload = self.stringify_non_strings(json_payload)
         json_str = json.dumps(stringified_payload)
 
-        tx = addr.invokeScript(
+        tx = self.caller.invokeScript(
             dappAddress=addr.address,
             functionName="storeMetrics",
             params=[{"type": "string", "value": json_str}],
