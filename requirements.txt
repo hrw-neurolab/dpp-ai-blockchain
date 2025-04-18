@@ -6,3 +6,4 @@ scikit-learn
 langchain[openai, ollama]
 pywaves
 python-dotenv
+loguru

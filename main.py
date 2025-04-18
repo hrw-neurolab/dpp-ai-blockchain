@@ -1,18 +1,31 @@
 import argparse
+import sys
+
 from dotenv import load_dotenv
+from loguru import logger
 
 from study.run_pipeline import RunPipeline
 
 
 def main(args):
-    load_dotenv()
     pipeline = RunPipeline(args)
     pipeline.run()
     pipeline.evaluate()
 
 
+def init_loguru():
+    logger.remove()
+    logger.add(
+        sys.stderr,
+        format="<green>{time:HH:mm:ss}</green> | <level>{level: <8}</level> | {message}",
+        level="INFO",
+        colorize=True,
+    )
+
+
 if __name__ == "__main__":
     load_dotenv()
+    init_loguru()
 
     parser = argparse.ArgumentParser(
         description="This script performs an evaluation of LLM JSON mapping capabilities."

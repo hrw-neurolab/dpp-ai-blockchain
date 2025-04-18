@@ -3,6 +3,7 @@ from typing import Literal
 
 from langchain_openai import ChatOpenAI
 from langchain_ollama import ChatOllama
+from loguru import logger
 
 from llm_mapping.target_model import OUTPUT_PARSER
 from llm_mapping.prompts.schema_driven import PROMPT as SCHEMA_DRIVEN_PROMPT
@@ -24,7 +25,10 @@ class LlmMapping:
             model_name (str): The model to use for evaluation.
             prompt_type ("few_shot" | "schema_driven" | "mapping_function"): The type of prompt to use.
         """
+        logger.info(f"Initializing LLM: {provider} - {model_name}")
         self.__init_llm(provider, model_name)
+
+        logger.info(f"Initializing prompt template: {prompt_type}")
         self.__init_prompt(prompt_type)
 
     def __init_llm(self, provider: str, model_name: str):
@@ -97,16 +101,18 @@ class LlmMapping:
             "error_type": None,
             "input_tokens": None,
             "output_tokens": None,
-            "total_tokens": None
+            "total_tokens": None,
         }
 
         start_time = time.time()
 
         try:
             response = chain.invoke(source)
-            result["input_tokens"] = response.response_metadata['token_usage']['prompt_tokens']
-            result["output_tokens"] = response.response_metadata['token_usage']['completion_tokens']
-            result["total_tokens"] = response.response_metadata['token_usage']['total_tokens']
+
+            token_usage = response.usage_metadata
+            result["input_tokens"] = token_usage["input_tokens"]
+            result["output_tokens"] = token_usage["output_tokens"]
+            result["total_tokens"] = token_usage["total_tokens"]
 
         except Exception as e:
             result["error"] = True
@@ -149,16 +155,19 @@ class LlmMapping:
             "error_type": None,
             "input_tokens": None,
             "output_tokens": None,
-            "total_tokens": None
+            "total_tokens": None,
         }
 
         start_time = time.time()
 
         try:
             response = chain.invoke(source)
-            result["input_tokens"] = response.response_metadata['token_usage']['prompt_tokens']
-            result["output_tokens"] = response.response_metadata['token_usage']['completion_tokens']
-            result["total_tokens"] = response.response_metadata['token_usage']['total_tokens']
+
+            token_usage = response.usage_metadata
+            result["input_tokens"] = token_usage["input_tokens"]
+            result["output_tokens"] = token_usage["output_tokens"]
+            result["total_tokens"] = token_usage["total_tokens"]
+
         except Exception as e:
             result["error"] = True
             result["error_msg"] = str(e)

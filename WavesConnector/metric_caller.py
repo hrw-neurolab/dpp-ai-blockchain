@@ -1,10 +1,11 @@
 import json
 import time
-import pywaves as pw
-from dotenv import load_dotenv
 import os
 
+import pywaves as pw
 import requests
+from dotenv import load_dotenv
+from loguru import logger
 
 
 class MetricCaller:
@@ -39,7 +40,7 @@ class MetricCaller:
             params=[{"type": "string", "value": json_str}],
             payments=[],
         )
-        print(f"storeMetrics called on {machine_id}: TX ID = {tx}")
+
         return tx
 
     def stringify_non_strings(self, data: dict) -> dict:
@@ -55,27 +56,27 @@ class MetricCaller:
         return stringify(data)
 
     def call_aggregate_metrics(self, date_str: str):
-        addr = self.aggregated["address"]
-        tx = self.caller.invokeScript(
-            dappAddress=addr,
+        self.caller.invokeScript(
+            dappAddress=self.aggregated["address"],
             functionName="aggregateBatchData",
             params=[{"type": "string", "value": date_str}],
             payments=[],
         )
-        print(f"aggregateBatchData called for date {date_str}: TX ID = {tx}")
-        return tx
 
     def wait_for_transaction(self, tx: dict, timeout: int = 60, interval: int = 1):
         tx_id = tx["id"]
         elapsed = 0
+
         while elapsed < timeout:
             tx_info = self.get_json_data(f"{self.node_url}/transactions/info/{tx_id}")
+
             if tx_info and "height" in tx_info:
-                print(f"Transaction confirmed in block {tx_info['height']}")
                 return tx_info
+
             time.sleep(interval)
             elapsed += interval
-        print("Timeout reached while waiting for transaction confirmation.")
+
+        logger.warning("Timeout reached while waiting for transaction confirmation")
         return None
 
     def get_json_data(self, api_url: str):
@@ -84,5 +85,6 @@ class MetricCaller:
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
-            print(f"Error fetching transaction data: {e}")
+            if response.status_code != 404:
+                logger.error(f"Error fetching transaction data: {e}")
             return None
