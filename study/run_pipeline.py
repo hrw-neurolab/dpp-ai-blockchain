@@ -136,8 +136,6 @@ class RunPipeline:
         total_samples = len(self.source_data[reference_machine_id])
 
         for sample_idx in range(total_samples):
-            current_date = None
-
             for machine_id in self.source_data.keys():
                 prefix = f"[{sample_idx + 1:03}/{total_samples}: {machine_id}]"
 
@@ -153,13 +151,12 @@ class RunPipeline:
 
                 parsed = mapping_result.get("response_parsed", None)
 
-                if current_date is None and "date" in source:
-                    current_date = source["date"]
-
                 if parsed is not None:
                     logger.info(f"{prefix} Pushing to blockchain")
                     blockchain_time_start = time.time()
+
                     tx_id, block = self.__push_to_blockchain(machine_id, parsed)
+
                     result["blockchain_time"] = time.time() - blockchain_time_start
                     logger.info(f"{prefix} Transaction ID: {tx_id}")
                     logger.info(f"{prefix} Block height: {block}")
@@ -172,9 +169,8 @@ class RunPipeline:
                 with open(machine_file_path, "a") as f:
                     f.write(json.dumps(result) + "\n")
 
-            if current_date is not None:
-                logger.info(f"Aggregating metrics for date: {current_date}")
-                self.metric_caller.call_aggregate_metrics(current_date)
+            logger.info(f"Aggregating metrics for date: {target['date']}")
+            self.metric_caller.call_aggregate_metrics(target["date"])
 
     def __run_function_mapping(self):
         """Run the mapping process once for each machine using the `mapping-function` prompt.
