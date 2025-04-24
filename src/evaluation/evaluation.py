@@ -100,8 +100,8 @@ def evaluate_direct_mapping(run_dir: str):
 
             stats.time.blockchain += result.get("blockchain_time", 0)
 
-            num_value_mismatches = len(
-                [output[key] != value for key, value in result["target"].items()]
+            num_value_mismatches = sum(
+                [1 for key, value in result["target"].items() if output[key] != value]
             )
 
             if num_value_mismatches > 0:
@@ -231,8 +231,8 @@ def evaluate_mapping_function(run_dir: str):
             stats.samples.pydantic_exception += 1
             continue
 
-        num_value_mismatches = len(
-            [output[key] != value for key, value in results["target"].items()]
+        num_value_mismatches = sum(
+            [1 for key, value in results["target"].items() if output[key] != value]
         )
 
         if num_value_mismatches > 0:

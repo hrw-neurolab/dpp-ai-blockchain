@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from src.dataset.preparation.util import convert_units_simple
 
 
