@@ -4,7 +4,7 @@ import sys
 from dotenv import load_dotenv
 from loguru import logger
 
-from study.run_pipeline import RunPipeline
+from src.run_pipeline import RunPipeline
 
 
 def main(args):
@@ -31,12 +31,6 @@ if __name__ == "__main__":
         description="This script performs an evaluation of LLM JSON mapping capabilities."
     )
     parser.add_argument(
-        "--output-dir",
-        type=str,
-        default="./output",
-        help="Directory to save the processed output files.",
-    )
-    parser.add_argument(
         "--model-provider",
         type=str,
         required=True,
@@ -57,9 +51,34 @@ if __name__ == "__main__":
         help="The prompt type to use for evaluation.",
     )
     parser.add_argument(
-        "--single-sample",
+        "--difficulty",
+        type=str,
+        required=True,
+        choices=["simple", "moderate", "complex"],
+        help="The difficulty level of the dataset to use for evaluation.",
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=str,
+        default="./output",
+        help="Directory to save the processed output files.",
+    )
+    parser.add_argument(
+        "--cache-dir",
+        type=str,
+        default="./data",
+        help="Directory to cache the datasets and few-shot prompts.",
+    )
+    parser.add_argument(
+        "--num-samples",
+        type=int,
+        default=None,
+        help="Number of samples to use for evaluation. If None, all samples will be used.",
+    )
+    parser.add_argument(
+        "--blockchain",
         action="store_true",
-        help="Run the evaluation on a single sample instead of the entire dataset.",
+        help="Flag to indicate whether to push the parsed data to the blockchain.",
     )
 
     args = parser.parse_args()

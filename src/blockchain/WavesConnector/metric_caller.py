@@ -9,7 +9,7 @@ from loguru import logger
 
 
 class MetricCaller:
-    def __init__(self, json_path="WavesConnector/waves_addresses.json"):
+    def __init__(self):
         load_dotenv()
         seed = os.getenv("SEED")
         self.node_url = "https://nodes-testnet.wavesnodes.com"
@@ -17,7 +17,11 @@ class MetricCaller:
         pw.setChain("testnet")
         self.caller = pw.Address(seed=seed)
 
-        with open(json_path, "r") as f:
+        addresses_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "waves_addresses.json"
+        )
+
+        with open(addresses_path, "r") as f:
             self.addresses = json.load(f)
 
         self.machine_map = {
