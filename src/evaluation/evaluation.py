@@ -100,15 +100,19 @@ def evaluate_direct_mapping(run_dir: str):
 
             stats.time.blockchain += result.get("blockchain_time", 0)
 
+            # Check if there are wrong values since pydantic only checks types
             num_value_mismatches = sum(
                 [1 for key, value in result["target"].items() if output[key] != value]
             )
+            num_correct = len(output) - num_value_mismatches
+            stats.parsed_fields.correct += num_correct
 
             if num_value_mismatches > 0:
                 stats.samples.false_positive += 1
                 stats.parsed_fields.value_mismatch += num_value_mismatches
                 continue
 
+            # If we reach here, the mapping was 100% successful
             stats.samples.correct += 1
             stats.time.correct += result["total_time"]
 
@@ -176,13 +180,13 @@ def evaluate_mapping_function(run_dir: str):
         # Read the json file
         file_path = os.path.join(run_dir, file_name)
         with open(file_path, "r") as f:
-            results = json.load(f)
+            result = json.load(f)
 
         # Accumulate the results
         stats.samples.total += 1
-        stats.time.total += results["total_time"]
+        stats.time.total += result["total_time"]
 
-        mapping_result = results["llm_mapping"]
+        mapping_result = result["llm_mapping"]
         if mapping_result["error_type"] == "LLM_CALL_EXCEPTION":
             stats.samples.llm_call_exception += 1
             continue
@@ -226,23 +230,26 @@ def evaluate_mapping_function(run_dir: str):
 
         if mapping_result["error_type"] == "PYDANTIC_VALIDATION_ERROR":
             # Try to find the reason for the validation error
-            _evaluate_validation_error(output, results["target"], stats)
+            _evaluate_validation_error(output, result["target"], stats)
             stats.parsed_fields.pydantic_error += len(mapping_result["error_msg"])
             stats.samples.pydantic_exception += 1
             continue
 
+        # Check if there are wrong values since pydantic only checks types
         num_value_mismatches = sum(
-            [1 for key, value in results["target"].items() if output[key] != value]
+            [1 for key, value in result["target"].items() if output[key] != value]
         )
+        num_correct = len(output) - num_value_mismatches
+        stats.parsed_fields.correct += num_correct
 
         if num_value_mismatches > 0:
             stats.samples.false_positive += 1
             stats.parsed_fields.value_mismatch += num_value_mismatches
             continue
 
-        # If we reach here, the mapping was successful
+        # If we reach here, the mapping was 100% successful
         stats.samples.correct += 1
-        stats.time.correct += results["total_time"]
+        stats.time.correct += result["total_time"]
 
     # Calculate the metrics
     logger.info(f"Calculating metrics")
