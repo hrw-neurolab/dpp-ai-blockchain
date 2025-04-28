@@ -1,34 +1,38 @@
 from datetime import datetime, timedelta
 import random
 
+from src.dataset.preparation.util import convert_units
+
 
 def machine_01(target: dict) -> dict:
     """
     ### Machine 01 - Inconsistent Casing & Field Variants
 
     Field names use inconsistent casing, delimiter styles, and synonym keys.
+    Units of the values are different from the standard.
     """
+    target = convert_units(target)
     return {
         "CurrentDate": target["date"],
-        "Operation_Hours": target["operation_hours"],
-        "Power_kwh": target["energy_consumption_kWh"],
-        "MaterialUsedKG": target["material_used_kg"],
-        "MaterialWaste_kg": target["material_waste_kg"],
-        "CO2KG": target["CO2_emissions_kg"],
-        "Water-Usage": target["water_consumption_liters"],
-        "WaterReclaimed": target["water_recycled_liters"],
-        "TEMP_C": target["operating_temperature_C"],
-        "HumidityPercent": target["ambient_humidity_percent"],
-        "VibrationLevel": target["vibration_level_mmps"],
-        "RenewEnergy%": target["renewable_energy_percent"],
-        "Yield": target["product_output_units"],
-        "Downtime_mins": target["downtime_minutes"],
+        "Operation_Sec": target["operation_hours"],
+        "Power_mwh": target["energy_consumption_kWh"],
+        "MaterialUsedG": target["material_used_kg"],
+        "MaterialWaste_mg": target["material_waste_kg"],
+        "CO2T": target["CO2_emissions_kg"],
+        "Water-Usage-ml": target["water_consumption_liters"],
+        "WaterReclaimedML": target["water_recycled_liters"],
+        "TEMP_K": target["operating_temperature_C"],
+        "HumidityFrac": target["ambient_humidity_percent"],
+        "VibrationLevelMmpmin": target["vibration_level_mmps"],
+        "RenewEnergyFrac": target["renewable_energy_percent"],
+        "YieldK": target["product_output_units"],
+        "Downtime_sec": target["downtime_minutes"],
         "NoiseDB": target["noise_level_dB"],
-        "Workers": target["worker_count"],
+        "Employees": target["worker_count"],
         "LubeLevel": target["lubrication_level"],
-        "CoolingStatus": target["cooling_system_status"],
-        "NeedsMaint": target["maintenance_required"],
-        "FuelType": target["fuel_type"],
+        "Cooling": target["cooling_system_status"],
+        "Needs-Service": target["maintenance_required"],
+        "Energy_Src": target["fuel_type"],
     }
 
 
@@ -83,29 +87,31 @@ def machine_03(target: dict) -> dict:
     """
     ### Machine 03 - Units Embedded in Strings
 
-    Numeric values are stored as strings with unit suffixes (e.g., "367.96 kWh").
+    Numeric values are stored as strings with unit suffixes (e.g., "367.96 MWh").
+    The units are not standardized and vary between fields.
     """
+    target = convert_units(target)
     return {
-        "date": target["date"],
-        "operation_hours": f"{target['operation_hours']} hrs",
-        "energy": f"{round(target['energy_consumption_kWh'] / 1000, 5)} MWh",
-        "material_used": f"{target['material_used_kg']} kg",
-        "material_waste": f"{target['material_waste_kg']} kg",
-        "CO2_emitted": f"{target['CO2_emissions_kg']} kg",
-        "water_used": f"{target["water_consumption_liters"] * 1000} mL",
-        "water_recycled": f"{target["water_recycled_liters"] * 1000} mL",
-        "temperature": f"{target['operating_temperature_C']} Celsius",
-        "humidity": f"{target['ambient_humidity_percent']}%",
-        "vibration": f"{target['vibration_level_mmps']} mm/s",
-        "renewables": f"{target['renewable_energy_percent']}%",
-        "output": f"{target['product_output_units']} units",
-        "downtime": f"{target['downtime_minutes']} minutes",
-        "noise": f"{target['noise_level_dB']} dB",
-        "workers": f"{target['worker_count']} persons",
-        "lubrication": f"{target['lubrication_level']} level",
-        "cooling": f"{target['cooling_system_status']} mode",
-        "maintenance": "yes" if target["maintenance_required"] else "no",
-        "fuel": f"{target['fuel_type']} power",
+        "CurrentDate": target["date"],
+        "Uptime": f"{target["operation_hours"]} s",
+        "Power": f"{target["energy_consumption_kWh"]} MWh",
+        "SubstanceUsed": f"{target["material_used_kg"]} g",
+        "SubstanceWaste": f"{target["material_waste_kg"]} mg",
+        "CarbonDioxide": f"{target["CO2_emissions_kg"]} t",
+        "WaterUsage": f"{target["water_consumption_liters"]} mL",
+        "WaterReclaimed": f"{target["water_recycled_liters"]} mL",
+        "Yield": f"{target["product_output_units"]} k units",
+        "Temp": f"{target["operating_temperature_C"]} K",
+        "Moisture": f"Fraction: {target["ambient_humidity_percent"]}",
+        "VibLvl": f"{target["vibration_level_mmps"]} mm/min",
+        "RegenerativePower": f"Fraction: {target["renewable_energy_percent"]}",
+        "Idle": f"{target["downtime_minutes"]} s",
+        "Noise": f"{target["noise_level_dB"]} dB",
+        "NumLocalEmployees": f"{target["worker_count"]} employees",
+        "Oiling": f"Level: {target["lubrication_level"]}",
+        "Cooling": f"Status: {target["cooling_system_status"]}",
+        "Service": f"Needed: {target["maintenance_required"]}",
+        "Fuel": f"Type: {target["fuel_type"]}",
     }
 
 
@@ -114,22 +120,24 @@ def machine_04(target: dict) -> dict:
     ### Machine 04 - Multilingual Field Names
 
     Field names are in multiple languages, including Spanish, French, and German.
+    The units are not standardized and vary between fields.
     """
+    target = convert_units(target)
     return {
         "datum": datetime.strptime(target["date"], "%Y-%m-%d").strftime("%d.%m.%Y"),
-        "horas_operativas": target["operation_hours"],
-        "consumo_energía_kWh": target["energy_consumption_kWh"],
-        "matériel_utilisé_kg": target["material_used_kg"],
-        "matériau_déchet_kg": target["material_waste_kg"],
-        "émissions_CO2_kg": target["CO2_emissions_kg"],
-        "utilisation_eau_litres": target["water_consumption_liters"],
-        "eau_recyclée_litres": target["water_recycled_liters"],
-        "température_fonctionnement_C": target["operating_temperature_C"],
-        "humidité_ambiante_%": target["ambient_humidity_percent"],
-        "niveau_de_vibration_mmps": target["vibration_level_mmps"],
-        "énergie_renouvelable_%": target["renewable_energy_percent"],
-        "unidades_producidas": target["product_output_units"],
-        "minutos_inactivos": target["downtime_minutes"],
+        "minutas_operativas": target["operation_hours"],
+        "consumo_energía_MWh": target["energy_consumption_kWh"],
+        "matériel_utilisé_g": target["material_used_kg"],
+        "matériau_déchet_mg": target["material_waste_kg"],
+        "émissions_CO2_t": target["CO2_emissions_kg"],
+        "utilisation_eau_millilitres": target["water_consumption_liters"],
+        "eau_recyclée_millilitres": target["water_recycled_liters"],
+        "température_fonctionnement_K": target["operating_temperature_C"],
+        "humidité_ambiante_partie": target["ambient_humidity_percent"],
+        "niveau_de_vibration_mmpmin": target["vibration_level_mmps"],
+        "énergie_renouvelable_partie": target["renewable_energy_percent"],
+        "unidades_producidas_miles": target["product_output_units"],
+        "segundos_inactivos": target["downtime_minutes"],
         "laermpegel_dB": target["noise_level_dB"],
         "nombre_trabajadores": target["worker_count"],
         "niveau_lubrification": target["lubrication_level"],
@@ -177,6 +185,7 @@ def machine_06(target: dict) -> dict:
     ### Machine 06 - JSON Log Format
 
     Data is structured as a JSON log with timestamps and event types.
+    The units are not standardized and vary between fields.
     """
     base_time = datetime.strptime(target["date"], "%Y-%m-%d")
 
@@ -188,32 +197,31 @@ def machine_06(target: dict) -> dict:
             "value": value if unit is None else f"{value} {unit}",
         }
 
+    target = convert_units(target)
+
     return {
         "log": [
-            make_event("operation_hours", target["operation_hours"], "h"),
-            make_event("energy_consumption", target["energy_consumption_kWh"], "kWh"),
-            make_event("material_used", target["material_used_kg"], "kg"),
-            make_event("material_waste", target["material_waste_kg"], "kg"),
-            make_event("CO2_emissions", target["CO2_emissions_kg"], "kg"),
-            make_event("water_used", target["water_consumption_liters"], "L"),
-            make_event("water_recycled", target["water_recycled_liters"], "L"),
-            make_event("temperature", target["operating_temperature_C"], "C"),
-            make_event("humidity", target["ambient_humidity_percent"], "%"),
-            make_event("vibration", target["vibration_level_mmps"], "mm/s"),
+            make_event("Uptime", target["operation_hours"], "s"),
+            make_event("Power", target["energy_consumption_kWh"], "MWh"),
+            make_event("SubstanceUsed", target["material_used_kg"], "g"),
+            make_event("SubstanceWaste", target["material_waste_kg"], "mg"),
+            make_event("CarbonDioxide", target["CO2_emissions_kg"], "t"),
+            make_event("WaterUsage", target["water_consumption_liters"], "mL"),
+            make_event("WaterReclaimed", target["water_recycled_liters"], "mL"),
+            make_event("Temp", target["operating_temperature_C"], "K"),
+            make_event("Moisture", target["ambient_humidity_percent"], "Fraction"),
+            make_event("VibLvl", target["vibration_level_mmps"], "mm/min"),
             make_event(
-                "renewable_energy_percent", target["renewable_energy_percent"], "%"
+                "RegenerativePower", target["renewable_energy_percent"], "Fraction"
             ),
-            make_event("product_output_units", target["product_output_units"]),
-            make_event("downtime_minutes", target["downtime_minutes"], "min"),
-            make_event("noise_level", target["noise_level_dB"], "dB"),
-            make_event("worker_count", target["worker_count"]),
-            make_event("lubrication_status", target["lubrication_level"]),
-            make_event("cooling_status", target["cooling_system_status"]),
-            make_event(
-                "maintenance_status",
-                "required" if target["maintenance_required"] else "not_required",
-            ),
-            make_event("fuel", target["fuel_type"]),
+            make_event("Yield", target["product_output_units"], "k units"),
+            make_event("Idle", target["downtime_minutes"], "s"),
+            make_event("Noise", target["noise_level_dB"], "dB"),
+            make_event("NumLocalEmployees", target["worker_count"]),
+            make_event("Oiling", target["lubrication_level"]),
+            make_event("Cooling", target["cooling_system_status"]),
+            make_event("Service", target["maintenance_required"]),
+            make_event("Fuel", target["fuel_type"]),
         ]
     }
 
@@ -223,6 +231,7 @@ def machine_07(target: dict) -> dict:
     ### Machine 07 - Log File
 
     Data is structured as a log file with timestamps and additional metadata.
+    The units are not standardized and vary between fields.
     """
     base_time = datetime.strptime(target["date"], "%Y-%m-%d")
 
@@ -231,28 +240,28 @@ def machine_07(target: dict) -> dict:
         msg = f"{event}: {value}{(' ' + unit) if unit else ''}"
         return f"[{timestamp}] IP=192.168.10.77 Facility=Plant-A Floor=2 Section=23/C :: {msg}"
 
+    target = convert_units(target)
+
     log_entries = [
-        log_line("operation_hours", target["operation_hours"], "h"),
-        log_line("energy_consumption", target["energy_consumption_kWh"], "kWh"),
-        log_line("material_used", target["material_used_kg"], "kg"),
-        log_line("material_waste", target["material_waste_kg"], "kg"),
-        log_line("CO2_emissions", target["CO2_emissions_kg"], "kg"),
-        log_line("water_consumed", target["water_consumption_liters"], "L"),
-        log_line("water_recycled", target["water_recycled_liters"], "L"),
-        log_line("temperature", target["operating_temperature_C"], "C"),
-        log_line("humidity", target["ambient_humidity_percent"], "%"),
-        log_line("vibration", target["vibration_level_mmps"], "mm/s"),
-        log_line("renewable_energy", target["renewable_energy_percent"], "%"),
-        log_line("product_output", target["product_output_units"], "units"),
-        log_line("downtime", target["downtime_minutes"], "min"),
-        log_line("noise_level", target["noise_level_dB"], "dB"),
-        log_line("worker_count", target["worker_count"]),
-        log_line("lubrication_status", target["lubrication_level"]),
-        log_line("cooling_status", target["cooling_system_status"]),
-        log_line(
-            "maintenance_required", "yes" if target["maintenance_required"] else "no"
-        ),
-        log_line("fuel_type", target["fuel_type"]),
+        log_line("Uptime", target["operation_hours"], "s"),
+        log_line("Power", target["energy_consumption_kWh"], "MWh"),
+        log_line("SubstanceUsed", target["material_used_kg"], "g"),
+        log_line("SubstanceWaste", target["material_waste_kg"], "mg"),
+        log_line("CarbonDioxide", target["CO2_emissions_kg"], "t"),
+        log_line("WaterUsage", target["water_consumption_liters"], "mL"),
+        log_line("WaterReclaimed", target["water_recycled_liters"], "mL"),
+        log_line("Temp", target["operating_temperature_C"], "K"),
+        log_line("Moisture", target["ambient_humidity_percent"], "Fraction"),
+        log_line("VibLvl", target["vibration_level_mmps"], "mm/min"),
+        log_line("RegenerativePower", target["renewable_energy_percent"], "Fraction"),
+        log_line("Yield", target["product_output_units"], "k units"),
+        log_line("Idle", target["downtime_minutes"], "s"),
+        log_line("Noise", target["noise_level_dB"], "dB"),
+        log_line("NumLocalEmployees", target["worker_count"]),
+        log_line("Oiling", target["lubrication_level"]),
+        log_line("Cooling", target["cooling_system_status"]),
+        log_line("Service", target["maintenance_required"]),
+        log_line("Fuel", target["fuel_type"]),
     ]
 
     return {"machine_log": "\n".join(sorted(log_entries))}
@@ -265,28 +274,31 @@ def machine_08(target: dict) -> dict:
     The machine reports its data as a single CSV string embedded inside a JSON field.
     The CSV includes headers and a single row of values.
     Column order is non-standardized, and all values are quoted strings.
+    The units are not standardized and vary between fields.
     """
+    target = convert_units(target)
+
     fields = [
-        ("date", target["date"]),
-        ("operation_hours", target["operation_hours"]),
-        ("energy_kWh", target["energy_consumption_kWh"]),
-        ("material_used_kg", target["material_used_kg"]),
-        ("material_waste_kg", target["material_waste_kg"]),
-        ("CO2_kg", target["CO2_emissions_kg"]),
-        ("water_used_liters", target["water_consumption_liters"]),
-        ("water_recycled_liters", target["water_recycled_liters"]),
-        ("temperature_C", target["operating_temperature_C"]),
-        ("humidity_percent", target["ambient_humidity_percent"]),
-        ("vibration_mmps", target["vibration_level_mmps"]),
-        ("renewables_percent", target["renewable_energy_percent"]),
-        ("output_units", target["product_output_units"]),
-        ("downtime_minutes", target["downtime_minutes"]),
-        ("noise_dB", target["noise_level_dB"]),
-        ("worker_count", target["worker_count"]),
-        ("lubrication_level", target["lubrication_level"]),
-        ("cooling_status", target["cooling_system_status"]),
-        ("maintenance_required", str(target["maintenance_required"])),
-        ("fuel_type", target["fuel_type"]),
+        ("CurrentDateIso", target["date"]),
+        ("UptimeSeconds", target["operation_hours"]),
+        ("PowerMWh", target["energy_consumption_kWh"]),
+        ("SubstanceUsedGrams", target["material_used_kg"]),
+        ("SubstanceWasteMilligrams", target["material_waste_kg"]),
+        ("CarbonDioxideTonnes", target["CO2_emissions_kg"]),
+        ("WaterUsageMilliliters", target["water_consumption_liters"]),
+        ("WaterReclaimedMilliliters", target["water_recycled_liters"]),
+        ("TempK", target["operating_temperature_C"]),
+        ("MoistureFraction", target["ambient_humidity_percent"]),
+        ("VibLvlMmpmin", target["vibration_level_mmps"]),
+        ("RegenerativePowerFraction", target["renewable_energy_percent"]),
+        ("YieldUnitsThousands", target["product_output_units"]),
+        ("IdleSeconds", target["downtime_minutes"]),
+        ("NoiseDb", target["noise_level_dB"]),
+        ("NumLocalEmployees", target["worker_count"]),
+        ("Oiling", target["lubrication_level"]),
+        ("Cooling", target["cooling_system_status"]),
+        ("Service", str(target["maintenance_required"])),
+        ("Fuel", target["fuel_type"]),
     ]
 
     random.shuffle(fields)  # Non-standardized order

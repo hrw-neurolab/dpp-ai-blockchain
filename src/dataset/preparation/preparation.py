@@ -39,7 +39,9 @@ BASE_TARGET = {
     "lubrication_level": lambda: random.choice(["low", "medium", "high"]),
     "cooling_system_status": lambda: random.choice(["operational", "faulty", "off"]),
     "maintenance_required": lambda: random.choice([True, False]),
-    "fuel_type": lambda: random.choice(["electric", "diesel", "natural_gas", "hybrid"]),
+    "fuel_type": lambda: random.choice(
+        ["electric", "fossil_fuel", "renewable_fuel", "hybrid"]
+    ),
 }
 
 
