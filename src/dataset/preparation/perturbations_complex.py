@@ -124,7 +124,7 @@ def machine_04(target: dict) -> dict:
     """
     target = convert_units(target)
     return {
-        "datum": datetime.strptime(target["date"], "%Y-%m-%d").strftime("%d.%m.%Y"),
+        "datum_iso": target["date"],
         "minutas_operativas": target["operation_hours"],
         "consumo_energía_MWh": target["energy_consumption_kWh"],
         "matériel_utilisé_g": target["material_used_kg"],
