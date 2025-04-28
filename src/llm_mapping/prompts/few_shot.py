@@ -41,7 +41,7 @@ Your job is to convert each raw input JSON into a structured, standardized JSON 
 Valid values for the categorical fields are:
 - lubrication_level: "low", "medium", "high"
 - cooling_system_status: "operational", "faulty", "off"
-- fuel_type: "electric", "diesel", "natural_gas", "hybrid"
+- fuel_type: "electric", "fossil_fuel", "renewable_fuel", "hybrid"
 
 Here are some examples:
 """
