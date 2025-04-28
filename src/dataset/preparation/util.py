@@ -34,9 +34,9 @@ categorical = {
     "off": "disabled",
     True: "yes",
     False: "no",
-    "electric": "battery_powered",
-    "diesel": "fossil_fuel",
-    "natural_gas": "compressed_gas",
+    "electric": "battery_based",
+    "fossil_fuel": "petroleum_based",
+    "renewable_fuel": "bio_based",
     "hybrid": "dual_source",
 }
 

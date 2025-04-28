@@ -13,28 +13,28 @@ from src.dataset.preparation import (
 
 BASE_TARGET_SIMPLE = {
     # float values
-    "operation_hours": lambda: round(np.random.normal(10, 2), 2),
-    "energy_consumption_kWh": lambda: round(np.random.normal(400, 100), 2),
-    "material_used_kg": lambda: round(np.random.normal(600, 150), 2),
-    "material_waste_kg": lambda: round(np.random.normal(50, 10), 2),
-    "CO2_emissions_kg": lambda: round(np.random.normal(250, 50), 2),
-    "water_consumption_liters": lambda: round(np.random.normal(1200, 300), 2),
-    "water_recycled_liters": lambda: round(np.random.normal(300, 100), 2),
+    "operation_hours": lambda: round(np.random.uniform(7, 10), 2),
+    "energy_consumption_kWh": lambda: round(np.random.uniform(300, 500), 2),
+    "material_used_kg": lambda: round(np.random.uniform(400, 700), 2),
+    "material_waste_kg": lambda: round(np.random.uniform(30, 50), 2),
+    "CO2_emissions_kg": lambda: round(np.random.uniform(200, 400), 2),
+    "water_consumption_liters": lambda: round(np.random.uniform(800, 1200), 2),
+    "water_recycled_liters": lambda: round(np.random.uniform(400, 800), 2),
     # integer values
-    "product_output_units": lambda: round(np.random.normal(300, 100)),
+    "product_output_units": lambda: round(np.random.uniform(200, 400)),
 }
 
 BASE_TARGET = {
     **BASE_TARGET_SIMPLE,
     # float values
-    "operating_temperature_C": lambda: round(np.random.normal(80, 10), 2),
-    "ambient_humidity_percent": lambda: round(np.random.normal(50, 5), 2),
-    "vibration_level_mmps": lambda: round(np.random.normal(2, 0.5), 2),
-    "renewable_energy_percent": lambda: round(np.random.normal(40, 10), 2),
+    "operating_temperature_C": lambda: round(np.random.uniform(70, 80), 2),
+    "ambient_humidity_percent": lambda: round(np.random.uniform(45, 55), 2),
+    "vibration_level_mmps": lambda: round(np.random.uniform(1, 3), 2),
+    "renewable_energy_percent": lambda: round(np.random.uniform(40, 60), 2),
     # integer values
-    "downtime_minutes": lambda: round(np.random.normal(30, 20)),
-    "noise_level_dB": lambda: round(np.random.normal(70, 5)),
-    "worker_count": lambda: round(np.random.normal(2, 1)),
+    "downtime_minutes": lambda: round(np.random.uniform(5, 40)),
+    "noise_level_dB": lambda: round(np.random.uniform(70, 90)),
+    "worker_count": lambda: round(np.random.uniform(1, 4)),
     # categorical values
     "lubrication_level": lambda: random.choice(["low", "medium", "high"]),
     "cooling_system_status": lambda: random.choice(["operational", "faulty", "off"]),

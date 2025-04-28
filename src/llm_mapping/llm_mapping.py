@@ -132,7 +132,7 @@ class LlmMapping:
 
         try:
             parsed = parse_json_markdown(response_raw)
-            parsed = self.parser.pydantic_object.model_validate(parsed, strict=True)
+            parsed = self.parser.pydantic_object.model_validate(parsed)
             result["response_parsed"] = parsed.model_dump()
 
         except ValidationError as e:
@@ -248,7 +248,7 @@ class LlmMapping:
 
         # Validate the output using the Pydantic parser
         try:
-            self.parser.pydantic_object.model_validate(output, strict=True)
+            self.parser.pydantic_object.model_validate(output)
         except ValidationError as e:
             result["error"] = True
             result["error_msg"] = e.errors(include_url=False, include_context=False)
