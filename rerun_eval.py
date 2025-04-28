@@ -38,6 +38,11 @@ def reset_run_dir(run_dir: str):
     if os.path.exists(metrics_file):
         os.remove(metrics_file)
 
+    # delete the wrong_samples.json file
+    metrics_file = os.path.join(run_dir, "wrong_samples.json")
+    if os.path.exists(metrics_file):
+        os.remove(metrics_file)
+
     # convert every .json in raw_results back to .jsonl
     raw_results_dir = os.path.join(run_dir, "raw_results")
     for filename in os.listdir(raw_results_dir):

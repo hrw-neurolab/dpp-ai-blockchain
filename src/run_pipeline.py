@@ -41,11 +41,12 @@ class RunPipeline:
             time.strftime("%Y-%m-%d_%H-%M-%S"),
             self.args.difficulty,
             self.args.prompt.replace("_", "-"),
-            self.args.model_name.replace("/", "-").replace(":", "-"),
         ]
         run_name = "_".join(run_name_parts)
 
-        self.run_dir = os.path.join(self.args.output_dir, run_name)
+        model_name = self.args.model_name.replace("/", "-").replace(":", "-")
+
+        self.run_dir = os.path.join(self.args.output_dir, model_name, run_name)
         os.makedirs(self.run_dir, exist_ok=True)
 
         self.raw_results_dir = os.path.join(self.run_dir, "raw_results")

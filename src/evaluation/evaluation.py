@@ -45,10 +45,18 @@ def evaluate_direct_mapping(run_dir: str):
     os.makedirs(plots_dir, exist_ok=True)
 
     metrics = {}
+    wrong_samples = {}
 
     # Loop through the jsonl files
     for file_name in os.listdir(raw_results_dir):
         machine_id = file_name.split(".")[0]
+
+        wrong_samples[machine_id] = {
+            "llm_call_exception": [],
+            "invalid_json": [],
+            "pydantic_exception": [],
+            "false_positive": [],
+        }
 
         # Read the jsonl file and convert it to json
         input_file_path = os.path.join(raw_results_dir, file_name)
@@ -78,6 +86,12 @@ def evaluate_direct_mapping(run_dir: str):
             mapping_result = result["llm_mapping"]
             if mapping_result["error_type"] == "LLM_CALL_EXCEPTION":
                 stats.samples.llm_call_exception += 1
+                wrong_samples[machine_id]["llm_call_exception"].append(
+                    {
+                        "index": index,
+                        "error_msg": mapping_result["error_msg"],
+                    }
+                )
                 continue
 
             stats.time.llm += mapping_result["llm_time"]
@@ -87,6 +101,13 @@ def evaluate_direct_mapping(run_dir: str):
 
             if mapping_result["error_type"] == "PARSING_EXCEPTION":
                 stats.samples.invalid_json += 1
+                wrong_samples[machine_id]["invalid_json"].append(
+                    {
+                        "index": index,
+                        "response_raw": mapping_result["response_raw"],
+                        "error_msg": mapping_result["error_msg"],
+                    }
+                )
                 continue
 
             output = parse_json_markdown(mapping_result["response_raw"])
@@ -96,20 +117,36 @@ def evaluate_direct_mapping(run_dir: str):
                 _evaluate_validation_error(output, result["target"], stats)
                 stats.parsed_fields.pydantic_error += len(mapping_result["error_msg"])
                 stats.samples.pydantic_exception += 1
+                wrong_samples[machine_id]["pydantic_exception"].append(
+                    {
+                        "index": index,
+                        "response_parsed": output,
+                        "error_msg": mapping_result["error_msg"],
+                    }
+                )
                 continue
 
             stats.time.blockchain += result.get("blockchain_time", 0)
 
             # Check if there are wrong values since pydantic only checks types
-            num_value_mismatches = sum(
-                [1 for key, value in result["target"].items() if output[key] != value]
-            )
+            value_mismatches = [
+                key for key, value in result["target"].items() if output[key] != value
+            ]
+            num_value_mismatches = len(value_mismatches)
+
             num_correct = len(output) - num_value_mismatches
             stats.parsed_fields.correct += num_correct
 
             if num_value_mismatches > 0:
                 stats.samples.false_positive += 1
                 stats.parsed_fields.value_mismatch += num_value_mismatches
+                wrong_samples[machine_id]["false_positive"].append(
+                    {
+                        "index": index,
+                        "response_parsed": {k: output[k] for k in value_mismatches},
+                        "target": {k: result["target"][k] for k in value_mismatches},
+                    }
+                )
                 continue
 
             # If we reach here, the mapping was 100% successful
@@ -144,6 +181,13 @@ def evaluate_direct_mapping(run_dir: str):
         json.dump(metrics_dict, f, indent=4)
 
     logger.info(f"Metrics saved to: {output_file_path}")
+
+    # Save the wrong samples to a json file
+    wrong_samples_file_path = os.path.join(run_dir, f"wrong_samples.json")
+    with open(wrong_samples_file_path, "w") as f:
+        json.dump(wrong_samples, f, indent=4)
+
+    logger.info(f"Wrong samples saved to: {wrong_samples_file_path}")
 
     # Save the plot figures
     for machine_id, machine_stat in metrics.items():

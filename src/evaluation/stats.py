@@ -8,8 +8,26 @@ def _zero_div(a: float, b: float) -> float:
 
 
 def _generate_plot(labels, values, title):
-    fig, ax = plt.subplots()
-    ax.bar(labels, values)
+    fig, ax = plt.subplots(figsize=(8, 6))
+    total = sum(values)
+    pcts = [v / total * 100 for v in values]
+
+    bars = ax.bar(labels, values)
+
+    # Annotate each bar with value and percentage
+    for bar, value, pct in zip(bars, values, pcts):
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height(),
+            f"{value}\n{pct:.1f}%",
+            ha="center",
+            va="bottom",
+            fontsize=10,
+        )
+
+    max_height = max(values)
+    ax.set_ylim(0, max_height * 1.15)
+
     ax.set_title(title)
     plt.xticks(rotation=45)
     plt.tight_layout()
