@@ -10,7 +10,7 @@ def _zero_div(a: float, b: float) -> float:
 def _generate_plot(labels, values, title):
     fig, ax = plt.subplots(figsize=(8, 6))
     total = sum(values)
-    pcts = [v / total * 100 for v in values]
+    pcts = [_zero_div(v, total) * 100 for v in values]
 
     bars = ax.bar(labels, values)
 
