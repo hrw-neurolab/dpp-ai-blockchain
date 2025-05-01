@@ -24,6 +24,7 @@ class LlmMapping:
         prompt_type: Literal["few_shot", "schema_driven", "mapping_function"],
         difficulty: Literal["simple", "moderate", "complex"],
         cache_dir: str,
+        ollama_host: str,
     ):
         """Initialize the LLM mapping class.
 
@@ -33,9 +34,10 @@ class LlmMapping:
             prompt_type ("few_shot" | "schema_driven" | "mapping_function"): The type of prompt to use.
             difficulty ("simple" | "moderate" | "complex"): The difficulty level of the dataset.
             cache_dir (str): The cache directory for storing the few-shot examples.
+            ollama_host (str): The host for the Ollama model server.
         """
         logger.info(f"Initializing LLM: {provider} - {model_name}")
-        self.__init_llm(provider, model_name)
+        self.__init_llm(provider, model_name, ollama_host)
 
         self.prompt_type = prompt_type
         self.difficulty = difficulty
@@ -48,17 +50,19 @@ class LlmMapping:
 
         self.chain = self.prompt | self.llm
 
-    def __init_llm(self, provider: str, model_name: str):
+    def __init_llm(self, provider: str, model_name: str, ollama_host: str):
         """Initialize the LLM based on the provider and model name.
 
         Args:
             provider (str): The provider for the language model.
             model_name (str): The model to use for evaluation.
+            ollama_host (str): The host for the Ollama model server.
         """
         if provider == "openai":
             self.llm = ChatOpenAI(
                 model=model_name,
                 temperature=0,
+                seed=42,
                 timeout=None,
                 max_retries=2,
             )
@@ -66,6 +70,9 @@ class LlmMapping:
             self.llm = ChatOllama(
                 model=model_name,
                 temperature=0,
+                seed=42,
+                base_url=ollama_host,
+                num_ctx=4096,
             )
         else:
             raise ValueError(
@@ -132,6 +139,12 @@ class LlmMapping:
 
         try:
             parsed = parse_json_markdown(response_raw)
+
+            # Langchain's parse_json_markdown function returns None if it finds
+            # a mismatched closing character in the JSON string.
+            if parsed is None:
+                raise Exception("JSON String has a mismatched closing character.")
+
             parsed = self.parser.pydantic_object.model_validate(parsed)
             result["response_parsed"] = parsed.model_dump()
 

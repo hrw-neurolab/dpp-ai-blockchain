@@ -1,0 +1,76 @@
+services:
+  ollama-gpu-0:
+    image: ollama/ollama
+    container_name: ollama-gpu-0
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            device_ids: ['0']
+            capabilities: [gpu]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    environment:
+      - OLLAMA_NOHISTORY=1
+    restart: unless-stopped
+  
+  ollama-gpu-1:
+    image: ollama/ollama
+    container_name: ollama-gpu-1
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            device_ids: ['1']
+            capabilities: [gpu]
+    ports:
+      - "11435:11434"
+    volumes:
+      - ollama:/root/.ollama
+    environment:
+      - OLLAMA_NOHISTORY=1
+    restart: unless-stopped
+  
+  ollama-gpu-2:
+    image: ollama/ollama
+    container_name: ollama-gpu-2
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            device_ids: ['2']
+            capabilities: [gpu]
+    ports:
+      - "11436:11434"
+    volumes:
+      - ollama:/root/.ollama
+    environment:
+      - OLLAMA_NOHISTORY=1
+    restart: unless-stopped
+
+  ollama-gpu-3:
+    image: ollama/ollama
+    container_name: ollama-gpu-3
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            device_ids: ['3']
+            capabilities: [gpu]
+    ports:
+      - "11437:11434"
+    volumes:
+      - ollama:/root/.ollama
+    environment:
+      - OLLAMA_NOHISTORY=1
+    restart: unless-stopped
+
+volumes:
+  ollama:
+    name: ollama

@@ -80,6 +80,12 @@ if __name__ == "__main__":
         action="store_true",
         help="Flag to indicate whether to push the parsed data to the blockchain.",
     )
+    parser.add_argument(
+        "--ollama-host",
+        type=str,
+        default="127.0.0.1:11434",
+        help="Host address for the Ollama model server.",
+    )
 
     args = parser.parse_args()
     main(args)

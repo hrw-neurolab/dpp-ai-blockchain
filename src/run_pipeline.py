@@ -22,13 +22,16 @@ class RunPipeline:
         self.args = args
         self.__init_run_dir()
 
-        self.dataset = MappingDataset(args.difficulty, args.cache_dir, args.num_samples)
+        num_samples = 1 if args.prompt == "mapping_function" else args.num_samples
+
+        self.dataset = MappingDataset(args.difficulty, args.cache_dir, num_samples)
         self.llm_mapping = LlmMapping(
             args.model_provider,
             args.model_name,
             args.prompt,
             args.difficulty,
             args.cache_dir,
+            args.ollama_host,
         )
         self.metric_caller = MetricCaller()
 

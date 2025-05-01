@@ -222,7 +222,7 @@ def evaluate_mapping_function(run_dir: str):
         logger.info(f"[{machine_id}] Evaluating...")
 
         # Read the json file
-        file_path = os.path.join(run_dir, file_name)
+        file_path = os.path.join(raw_results_dir, file_name)
         with open(file_path, "r") as f:
             result = json.load(f)
 
@@ -310,7 +310,7 @@ def evaluate_mapping_function(run_dir: str):
 
     # Save the plot figures
     for file_name, plot in stats.plots():
-        file_path = os.path.join(plots_dir, file_name)
+        file_path = os.path.join(plots_dir, file_name + ".pdf")
         plot.savefig(file_path, format="pdf")
 
     logger.info(f"Plots saved to: {plots_dir}")

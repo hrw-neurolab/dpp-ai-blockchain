@@ -34,14 +34,20 @@ def reset_run_dir(run_dir: str):
         shutil.rmtree(plots_dir)
 
     # delete the metrics.json file
-    metrics_file = os.path.join(run_dir, "metrics.json")
-    if os.path.exists(metrics_file):
-        os.remove(metrics_file)
+    file_name = os.path.join(run_dir, "metrics.json")
+    if os.path.exists(file_name):
+        os.remove(file_name)
 
     # delete the wrong_samples.json file
-    metrics_file = os.path.join(run_dir, "wrong_samples.json")
-    if os.path.exists(metrics_file):
-        os.remove(metrics_file)
+    file_name = os.path.join(run_dir, "wrong_samples.json")
+    if os.path.exists(file_name):
+        os.remove(file_name)
+
+    # delete the parsed_functions directory
+    parsed_fns_dir = os.path.join(run_dir, "parsed_functions")
+    if os.path.exists(parsed_fns_dir):
+        shutil.rmtree(parsed_fns_dir)
+        return
 
     # convert every .json in raw_results back to .jsonl
     raw_results_dir = os.path.join(run_dir, "raw_results")

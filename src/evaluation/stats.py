@@ -29,7 +29,7 @@ def _generate_plot(labels, values, title):
     ax.set_ylim(0, max_height * 1.15)
 
     ax.set_title(title)
-    plt.xticks(rotation=45)
+    plt.xticks(rotation=45, ha="right")
     plt.tight_layout()
     return fig
 
