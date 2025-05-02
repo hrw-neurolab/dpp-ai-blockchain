@@ -9,6 +9,7 @@ from src.dataset.mapping_dataset import MappingDataset
 from src.llm_mapping import LlmMapping
 from src.blockchain.WavesConnector import MetricCaller
 from src.evaluation import evaluate_direct_mapping, evaluate_mapping_function
+from src.llm_mapping.iterative_refiner import IterativeRefiner
 
 
 class RunPipeline:
@@ -33,6 +34,10 @@ class RunPipeline:
             args.cache_dir,
             args.ollama_host,
         )
+        if (args.model_provider == "ollama" and args.prompt in ["few_shot", "schema_driven"]):
+            max_try = getattr(args, "max_refinement_attempts", 3)
+            self.llm_mapping = IterativeRefiner(self.llm_mapping, max_attempts=max_try)
+        
         self.metric_caller = MetricCaller()
 
         self.__save_config()

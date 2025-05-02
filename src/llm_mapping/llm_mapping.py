@@ -72,7 +72,7 @@ class LlmMapping:
                 temperature=0,
                 seed=42,
                 base_url=ollama_host,
-                num_ctx=4096,
+                num_ctx=8000,
             )
         else:
             raise ValueError(
