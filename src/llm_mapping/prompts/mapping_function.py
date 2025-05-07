@@ -32,7 +32,7 @@ SYSTEM_PROMPTS = {
     "complex": SYSTEM_PROMPT_SIMPLE,
 }
 
-HUMAN_PROMPT = "{input_json}"
+HUMAN_PROMPT = "{input_json}\n\n{correction_msg}"
 
 
 def get_mapping_function_prompt(
@@ -63,7 +63,7 @@ def get_mapping_function_prompt(
         "",
     ).strip()
 
-    prompt = {"input_json": RunnablePassthrough()} | prompt_template.partial(
+    prompt = {"input_json": RunnablePassthrough(), "correction_msg": RunnablePassthrough()} | prompt_template.partial(
         format_instructions=format_instructions
     )
 
