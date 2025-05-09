@@ -69,8 +69,8 @@ class LlmMapping:
         elif provider == "ollama":
             self.llm = ChatOllama(
                 model=model_name,
-                temperature=0.8,
-                # seed=42,
+                temperature=0,
+                seed=42,
                 base_url=ollama_host,
                 num_ctx=8000,
             )
