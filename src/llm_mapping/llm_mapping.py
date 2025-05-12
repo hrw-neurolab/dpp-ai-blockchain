@@ -1,5 +1,6 @@
 import time
 from typing import Literal
+import re
 
 from langchain.output_parsers import PydanticOutputParser
 from langchain_core.utils.json import parse_json_markdown
@@ -95,6 +96,7 @@ class LlmMapping:
                 f"Invalid prompt type: {self.prompt_type}. "
                 "Supported types are 'few_shot', 'schema_driven', and 'mapping_function'."
             )
+     
 
     def __process_direct_mapping(self, source: dict):
         """Map a sample directly using the LLM and the provided prompt.
@@ -138,6 +140,7 @@ class LlmMapping:
         result["response_raw"] = response_raw
 
         try:
+            response_raw = self.strip_thinking_tags(response_raw)
             parsed = parse_json_markdown(response_raw)
 
             # Langchain's parse_json_markdown function returns None if it finds
@@ -202,6 +205,8 @@ class LlmMapping:
 
         response_raw = response.text().strip()
         result["response_raw"] = response_raw
+
+        response_raw = self.strip_thinking_tags(response_raw)
 
         # Extract the code string from the response
         if "```python" not in response_raw or not response_raw.endswith("```"):
@@ -282,3 +287,4 @@ class LlmMapping:
             return self.__process_mapping_function(source)
 
         return self.__process_direct_mapping(source)
+    

@@ -5,6 +5,7 @@ import copy
 import json
 import textwrap
 import time
+import re
 from types import FunctionType
 from typing import Any, Dict, List
 
@@ -44,7 +45,7 @@ class FunctionRefiner:
         # expose same attributes as the wrapped mapper
         self.prompt = base_mapper.prompt
         self.parser = base_mapper.parser
-
+    
     def __call__(self, source: Dict[str, Any]):
         attempts = 0
         correction_msg = ""
@@ -81,7 +82,10 @@ class FunctionRefiner:
 
             attempts += 1
             correction_msg = self._build_correction_msg(single)
-
+    def strip_thinking_tags(self, response_raw: str) -> str:
+   
+        return re.sub(r"<think>.*?</think>\s*", "", response_raw, flags=re.DOTALL).strip()   
+    
     def _single_run(self, payload: Dict[str, Any], attempt_no: int):
         bm = self.base_mapper
         res: Dict[str, Any] = {
@@ -114,6 +118,7 @@ class FunctionRefiner:
 
         res["llm_time"] = time.time() - t0
         res["response_raw"] = response.text().strip()
+        raw = self.strip_thinking_tags(raw)
 
         if "```python" not in res["response_raw"] or "```" not in res["response_raw"]:
             res.update(

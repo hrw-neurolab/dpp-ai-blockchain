@@ -4,6 +4,7 @@ import copy
 import json
 import time
 from typing import Any, Dict, List
+import re
 
 from langchain_core.utils.json import parse_json_markdown
 from loguru import logger
@@ -45,7 +46,7 @@ class IterativeRefiner:
             single = self._single_run(payload, attempts)
             history.append(copy.deepcopy(single))  
             
-            if (not single["error"]) or single["error_type"] != "PYDANTIC_VALIDATION_ERROR" or attempts >= self.max_attempts:
+            if (not single["error"]) or attempts >= self.max_attempts:
                 final_result = copy.deepcopy(single)
                 final_result["refinement_attempts"] = attempts
                 final_result["attempt_history"] = history
@@ -63,7 +64,11 @@ class IterativeRefiner:
                  "Error list:\n"
                  + json.dumps(single["error_msg"], ensure_ascii=False)
                  )
-
+    
+    def strip_thinking_tags(self, response_raw: str) -> str:
+   
+        return re.sub(r"<think>.*?</think>\s*", "", response_raw, flags=re.DOTALL).strip()         
+        
     def _single_run(self, payload: Dict[str, Any], attempt_no: int):
         bm = self.base_mapper
         result = {
@@ -78,7 +83,7 @@ class IterativeRefiner:
             "input_tokens": None,
             "output_tokens": None,
             "total_tokens": None,
-        }
+        }    
 
         start = time.time()
         try:
@@ -99,10 +104,12 @@ class IterativeRefiner:
 
         result["llm_time"] = time.time() - start
         raw = resp.text()
+        raw = self.strip_thinking_tags(raw)
         result["response_raw"] = raw
 
         try:
             parsed = parse_json_markdown(raw)
+            print(parsed)
             parsed = bm.parser.pydantic_object.model_validate(parsed)
             result["response_parsed"] = parsed.model_dump()
         except ValidationError as e:
