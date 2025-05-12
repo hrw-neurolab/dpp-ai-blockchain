@@ -111,7 +111,6 @@ class FunctionRefiner:
             res["input_tokens"] = token_usage["input_tokens"]
             res["output_tokens"] = token_usage["output_tokens"]
             res["total_tokens"] = token_usage["total_tokens"]
-            print(response)
         except Exception as e:  
             res.update(error=True, error_msg=str(e), error_type="LLM_CALL_EXCEPTION")
             return res

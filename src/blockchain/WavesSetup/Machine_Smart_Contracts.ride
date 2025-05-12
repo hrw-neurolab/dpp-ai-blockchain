@@ -3,7 +3,7 @@
 {-# SCRIPT_TYPE ACCOUNT #-}
 
 func removeMarks (s: String) = {
-    let a = drop(s, 2)
+    let a = drop(s, 1)
     let b = dropRight(a, 1)
     b
 }
@@ -90,7 +90,7 @@ func parseJson (json: String) = {
 
     let kv8 = split(entries[8], ":")
     let k8 = removeMarks(kv8[0])
-    let v8 = dropRight(removeMarks(kv8[1]), 2)
+    let v8 = removeMarks(kv8[1])
 
     (
       [k0, v0],

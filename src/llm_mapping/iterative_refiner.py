@@ -109,7 +109,6 @@ class IterativeRefiner:
 
         try:
             parsed = parse_json_markdown(raw)
-            print(parsed)
             parsed = bm.parser.pydantic_object.model_validate(parsed)
             result["response_parsed"] = parsed.model_dump()
         except ValidationError as e:

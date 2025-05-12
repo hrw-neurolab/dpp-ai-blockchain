@@ -137,9 +137,9 @@ class RunPipeline:
             with open(file_path, "a") as f:
                 f.write(json.dumps(result) + "\n")
 
-            if self.args.blockchain:
-                logger.info(f"Aggregating metrics for date: {target['date']}")
-                self.metric_caller.call_aggregate_metrics(target["date"])
+        if self.args.blockchain:
+            logger.info(f"Aggregating metrics for date: {target['date']}")
+            self.metric_caller.call_aggregate_metrics(target["date"])
 
     def __run_function_mapping(self):
         """Run the mapping process once for each machine using the `mapping-function` prompt.

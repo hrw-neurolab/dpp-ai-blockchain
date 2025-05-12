@@ -2,16 +2,16 @@
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
-let machine1_address = Address(base58'3NCCCJXXoMRkcN7xYBrpQuQWQJJA8i1Dcmt')
-let machine2_address = Address(base58'3N3euuhUpbjVhg71jSDCNkVECYh6vx31r2R')
-let machine3_address = Address(base58'3N7ohxSHam7QFtvxDTgBJv53PbWv5nympuY')
-let machine4_address = Address(base58'3MsaWJNJDuLi8qLs5Q3RiZKvD9JkULLjR9D')
-let machine5_address = Address(base58'3MuPkpJFFsit7aUsKiaekcZp8FJr9kFd2CJ')
-let machine6_address = Address(base58'3MxjGbBCAbpoPxaNfugyUaA11BcFKixY5L4')
-let machine7_address = Address(base58'3N3vp6nexwfVMk77YUxG9NLsrFopkP1mzvD')
-let machine8_address = Address(base58'3N9AAtf5bW8QNbKbcVetFeDK76uJWbMeNKB')
-let machine9_address = Address(base58'3MtS8qYBeTvW3Mb35QTS3YaBzQEfPWFLMjL')
-let machine10_address = Address(base58'3Mv6M95Fgj5r6Lqa24eV83UMuuqpsPVSjMV')
+let machine1_address = Address(base58'3MpuRx8R2VZ5k2uCpUi7DtqzyKLw3Jpoebu')
+let machine2_address = Address(base58'3MqW3sKT3h3JgjeuCtzY28b6JzNuKrgUYA1')
+let machine3_address = Address(base58'3N1n917KuH6ohuZT2MHDrLPhwbmZZ6wTc9D')
+let machine4_address = Address(base58'3N36cMQNsw8v2G7cGVhCjZYsPREgB6nKSeH')
+let machine5_address = Address(base58'3N2cdA6UiDmAVfk2TbwmSF3wfLhTYmq8GLT')
+let machine6_address = Address(base58'3N5MkjixZbwJ8oBUBNJzVKq658VR1QDEKNF')
+let machine7_address = Address(base58'3N1bDZQHoPeatBTvsFRubbR7pwPYjTobqMv')
+let machine8_address = Address(base58'3N8nJQ1fvGMPUSqLTvGVdqrGhQrj5VDB61Z')
+let machine9_address = Address(base58'3N9bbRAqdShJdVidqpAi7wzEJdtMcs6mhF9')
+let machine10_address = Address(base58'3NCmHUtx16T31Hu7V4ZHEjhYEXvfxaA46uB')
 
 func energyConsumptionPerDay(address: Address, date: String) = {
     let key = toString(address) + "_" + date + "_energy_consumption_kWh" 
