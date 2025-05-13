@@ -29,14 +29,26 @@ class MetricCaller:
         }
         self.aggregated = self.addresses["aggregated"]
 
+    def scale_floats_in_dict(self, data: dict, factor: int = 100) -> dict:
+        def scale(value):
+            try:
+                float_val = float(value)
+                scaled_val = int(float_val * factor)
+                return str(scaled_val)
+            except (ValueError, TypeError):
+                return value
+
+        return {k: scale(v) for k, v in data.items()}
+
     def call_store_metrics(self, machine_id: str, json_payload: dict):
         if machine_id not in self.machine_map:
             raise ValueError(f"Invalid machine ID: {machine_id}")
 
         seed = self.machine_map[machine_id]["seedPhrase"]
         addr = pw.Address(seed=seed)
+        json_payload = self.scale_floats_in_dict(json_payload)
         stringified_payload = self.stringify_non_strings(json_payload)
-        json_str = json.dumps(stringified_payload)
+        json_str = json.dumps(stringified_payload, separators=(",", ":"))
 
         tx = self.caller.invokeScript(
             dappAddress=addr.address,
@@ -44,6 +56,7 @@ class MetricCaller:
             params=[{"type": "string", "value": json_str}],
             payments=[],
         )
+        print(tx)
 
         return tx
 

@@ -86,6 +86,12 @@ if __name__ == "__main__":
         default="127.0.0.1:11434",
         help="Host address for the Ollama model server.",
     )
+    parser.add_argument(
+        "--max-refinement-attempts",
+        type=int,
+        default=0,
+        help="Maximum number of refinement attempts for the model.",
+    )
 
     args = parser.parse_args()
     main(args)

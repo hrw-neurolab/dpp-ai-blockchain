@@ -1,5 +1,6 @@
 import time
 from typing import Literal
+import re
 
 from langchain.output_parsers import PydanticOutputParser
 from langchain_core.utils.json import parse_json_markdown
@@ -72,7 +73,7 @@ class LlmMapping:
                 temperature=0,
                 seed=42,
                 base_url=ollama_host,
-                num_ctx=4096,
+                num_ctx=8000,
             )
         else:
             raise ValueError(
@@ -96,11 +97,20 @@ class LlmMapping:
                 "Supported types are 'few_shot', 'schema_driven', and 'mapping_function'."
             )
 
-    def __process_direct_mapping(self, source: dict):
+    @staticmethod
+    def __strip_thinking_tags(response_raw: str) -> str:
+        return re.sub(
+            r"<think>.*?</think>\s*",
+            "",
+            response_raw,
+            flags=re.DOTALL,
+        ).strip()
+
+    def __process_direct_mapping(self, template_vars: dict):
         """Map a sample directly using the LLM and the provided prompt.
 
         Args:
-            source (dict): The source data to evaluate.
+            template_vars (dict): The template variables for the prompt.
 
         Returns:
             A dictionary containing the evaluation results.
@@ -120,7 +130,7 @@ class LlmMapping:
         start_time = time.time()
 
         try:
-            response = self.chain.invoke(source)
+            response = self.chain.invoke(template_vars)
 
             token_usage = response.usage_metadata
             result["input_tokens"] = token_usage["input_tokens"]
@@ -138,6 +148,7 @@ class LlmMapping:
         result["response_raw"] = response_raw
 
         try:
+            response_raw = self.__strip_thinking_tags(response_raw)
             parsed = parse_json_markdown(response_raw)
 
             # Langchain's parse_json_markdown function returns None if it finds
@@ -160,10 +171,11 @@ class LlmMapping:
 
         return result
 
-    def __process_mapping_function(self, source: dict):
+    def __process_mapping_function(self, template_vars: dict, source: dict):
         """Generate and execute a mapping function to transform the source data into the target format.
 
         Args:
+            template_vars (dict): The template variables for the prompt.
             source (dict): The source data to evaluate.
 
         Returns:
@@ -185,7 +197,7 @@ class LlmMapping:
         start_time = time.time()
 
         try:
-            response = self.chain.invoke(source)
+            response = self.chain.invoke(template_vars)
 
             token_usage = response.usage_metadata
             result["input_tokens"] = token_usage["input_tokens"]
@@ -202,6 +214,8 @@ class LlmMapping:
 
         response_raw = response.text().strip()
         result["response_raw"] = response_raw
+
+        response_raw = self.__strip_thinking_tags(response_raw)
 
         # Extract the code string from the response
         if "```python" not in response_raw or not response_raw.endswith("```"):
@@ -269,16 +283,17 @@ class LlmMapping:
 
         return result
 
-    def __call__(self, source: dict):
+    def __call__(self, template_vars: dict, source: dict):
         """Process a sample using the selected prompt type.
 
         Args:
-            source (dict): The source data to process.
+            template_vars (dict): The template variables for the prompt.
+            source (dict): The source data to evaluate (Only used for mapping_function prompt type).
 
         Returns:
             A dictionary containing the results.
         """
         if self.prompt_type == "mapping_function":
-            return self.__process_mapping_function(source)
+            return self.__process_mapping_function(template_vars, source)
 
-        return self.__process_direct_mapping(source)
+        return self.__process_direct_mapping(template_vars)

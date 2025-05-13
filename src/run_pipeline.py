@@ -9,6 +9,7 @@ from src.dataset.mapping_dataset import MappingDataset
 from src.llm_mapping import LlmMapping
 from src.blockchain.WavesConnector import MetricCaller
 from src.evaluation import evaluate_direct_mapping, evaluate_mapping_function
+from src.llm_mapping.iterative_refiner import IterativeRefiner
 
 
 class RunPipeline:
@@ -25,14 +26,8 @@ class RunPipeline:
         num_samples = 1 if args.prompt == "mapping_function" else args.num_samples
 
         self.dataset = MappingDataset(args.difficulty, args.cache_dir, num_samples)
-        self.llm_mapping = LlmMapping(
-            args.model_provider,
-            args.model_name,
-            args.prompt,
-            args.difficulty,
-            args.cache_dir,
-            args.ollama_host,
-        )
+        self.__init_llm_mapping()
+
         self.metric_caller = MetricCaller()
 
         self.__save_config()
@@ -65,15 +60,37 @@ class RunPipeline:
         )
         logger.info(f"Run directory created: {self.run_dir}")
 
+    def __init_llm_mapping(self):
+        """Initialize the LLM mapping based on the specified model provider and prompt type."""
+        self.llm_mapping = LlmMapping(
+            self.args.model_provider,
+            self.args.model_name,
+            self.args.prompt,
+            self.args.difficulty,
+            self.args.cache_dir,
+            self.args.ollama_host,
+        )
+
+        max_attempts = self.args.max_refinement_attempts
+
+        if max_attempts > 0:
+            self.llm_mapping = IterativeRefiner(self.llm_mapping, max_attempts)
+            logger.info(f"Refinement attempts set to {max_attempts}.")
+
     def __save_config(self):
         config_file_path = os.path.join(self.run_dir, "config.json")
         with open(config_file_path, "w") as f:
             json.dump(vars(self.args), f, indent=4)
 
     def __save_prompt(self):
+        formatted_prompt = self.llm_mapping.prompt.format(
+            input_json="{input_json}",
+            correction_msg="{correction_msg}",
+        )
+
         prompt_file_path = os.path.join(self.run_dir, "prompt.txt")
         with open(prompt_file_path, "w") as f:
-            f.write(self.llm_mapping.prompt.invoke({}).to_string())
+            f.write(formatted_prompt)
 
     def __push_to_blockchain(self, machine_id: str, data: dict) -> tuple[str, int]:
         """Push the parsed data to the blockchain.
@@ -107,7 +124,8 @@ class RunPipeline:
             logger.info(f"{prefix} Running LLM mapping")
             sample_time_start = time.time()
 
-            mapping_result = self.llm_mapping(source)
+            template_vars = {"input_json": json.dumps(source)}
+            mapping_result = self.llm_mapping(template_vars, source)
             result["llm_mapping"] = mapping_result
 
             parsed = mapping_result.get("response_parsed", None)
@@ -128,9 +146,9 @@ class RunPipeline:
             with open(file_path, "a") as f:
                 f.write(json.dumps(result) + "\n")
 
-            if self.args.blockchain:
-                logger.info(f"Aggregating metrics for date: {target['date']}")
-                self.metric_caller.call_aggregate_metrics(target["date"])
+        if self.args.blockchain:
+            logger.info(f"Aggregating metrics for date: {target['date']}")
+            self.metric_caller.call_aggregate_metrics(target["date"])
 
     def __run_function_mapping(self):
         """Run the mapping process once for each machine using the `mapping-function` prompt.
@@ -149,7 +167,8 @@ class RunPipeline:
 
             sample_time_start = time.time()
 
-            result["llm_mapping"] = self.llm_mapping(source)
+            template_vars = {"input_json": json.dumps(source)}
+            result["llm_mapping"] = self.llm_mapping(template_vars, source)
 
             result["total_time"] = time.time() - sample_time_start
 

@@ -6,7 +6,6 @@ from langchain.prompts import (
     HumanMessagePromptTemplate,
 )
 from langchain.output_parsers import PydanticOutputParser
-from langchain_core.runnables import RunnablePassthrough
 
 
 SYSTEM_PROMPT_SIMPLE = """
@@ -63,8 +62,4 @@ def get_mapping_function_prompt(
         "",
     ).strip()
 
-    prompt = {"input_json": RunnablePassthrough()} | prompt_template.partial(
-        format_instructions=format_instructions
-    )
-
-    return prompt
+    return prompt_template.partial(format_instructions=format_instructions)

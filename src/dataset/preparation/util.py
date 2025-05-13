@@ -27,7 +27,7 @@ date_to_iso = lambda date: datetime.strptime(date, "%Y-%m-%d").isoformat()
 
 categorical = {
     "low": "reduced",
-    "medium": "normal",
+    "moderate": "normal",
     "high": "increased",
     "operational": "ok",
     "faulty": "problem",
