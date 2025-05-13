@@ -8,8 +8,6 @@ from langchain.prompts import (
     SystemMessagePromptTemplate,
     HumanMessagePromptTemplate,
 )
-from langchain_core.runnables import RunnablePassthrough
-
 from src.dataset.preparation import generate_few_shot_examples
 
 
@@ -24,7 +22,6 @@ Your job is to convert each raw input JSON into a structured, standardized JSON 
 - Extract and rename fields according to the target format.
 - Ensure units are correct and standardized (e.g., converting g to kg when necessary).
 - Ensure the data types are correct (e.g., converting strings to numbers).
-- Return only valid JSON — no extra commentary.
 
 ### STRICT OUTPUT FORMAT
 Return **ONLY** a single JSON object – NO markdown, NO code fences,
@@ -41,10 +38,9 @@ Your job is to convert each raw input JSON into a structured, standardized JSON 
 - Extract and rename fields according to the target format.
 - Ensure units are correct and standardized (e.g., converting g to kg when necessary).
 - Ensure the data types are correct (e.g., converting strings to numbers).
-- Return only valid JSON — no extra commentary.
 
 Valid values for the categorical fields are:
-- lubrication_level: "low", "medium", "high"
+- lubrication_level: "low", "moderate", "high"
 - cooling_system_status: "operational", "faulty", "off"
 - fuel_type: "electric", "fossil_fuel", "renewable_fuel", "hybrid"
 
@@ -62,7 +58,7 @@ SYSTEM_PROMPTS = {
     "complex": SYSTEM_PROMPT_SIMPLE,
 }
 
-HUMAN_PROMPT = "{input_json}\n\n{correction_msg}" 
+HUMAN_PROMPT = "{input_json}"
 
 
 def get_few_shot_prompt(
@@ -110,6 +106,4 @@ def get_few_shot_prompt(
         ]
     )
 
-    prompt = {"input_json": RunnablePassthrough(), "correction_msg": RunnablePassthrough(),} | prompt_template
-
-    return prompt
+    return prompt_template

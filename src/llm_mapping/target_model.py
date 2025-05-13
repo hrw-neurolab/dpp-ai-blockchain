@@ -36,7 +36,7 @@ class TargetModelSimple(BaseModel):
 
 class LubricationLevel(str, Enum):
     LOW = "low"
-    MEDIUM = "medium"
+    MODERATE = "moderate"
     HIGH = "high"
 
 

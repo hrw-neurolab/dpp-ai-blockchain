@@ -87,11 +87,11 @@ if __name__ == "__main__":
         help="Host address for the Ollama model server.",
     )
     parser.add_argument(
-   "--max-refinement-attempts",
-   type=int,
-   default=3,
-   help="Maximale Zahl der Korrekturrunden für Ollama-Modelle.",
-)
+        "--max-refinement-attempts",
+        type=int,
+        default=0,
+        help="Maximum number of refinement attempts for the model.",
+    )
 
     args = parser.parse_args()
     main(args)

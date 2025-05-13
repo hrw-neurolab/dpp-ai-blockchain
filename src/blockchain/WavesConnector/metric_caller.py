@@ -29,7 +29,6 @@ class MetricCaller:
         }
         self.aggregated = self.addresses["aggregated"]
 
-
     def scale_floats_in_dict(self, data: dict, factor: int = 100) -> dict:
         def scale(value):
             try:
@@ -37,10 +36,9 @@ class MetricCaller:
                 scaled_val = int(float_val * factor)
                 return str(scaled_val)
             except (ValueError, TypeError):
-                return value  
+                return value
 
         return {k: scale(v) for k, v in data.items()}
-
 
     def call_store_metrics(self, machine_id: str, json_payload: dict):
         if machine_id not in self.machine_map:
@@ -58,6 +56,7 @@ class MetricCaller:
             params=[{"type": "string", "value": json_str}],
             payments=[],
         )
+        print(tx)
 
         return tx
 

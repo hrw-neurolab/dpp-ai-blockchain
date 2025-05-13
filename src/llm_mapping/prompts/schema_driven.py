@@ -6,7 +6,6 @@ from langchain.prompts import (
     HumanMessagePromptTemplate,
 )
 from langchain.output_parsers import PydanticOutputParser
-from langchain_core.runnables import RunnablePassthrough
 
 
 SYSTEM_PROMPT_SIMPLE = """
@@ -32,8 +31,7 @@ HUMAN_PROMPT = "{input_json}"
 
 
 def get_schema_driven_prompt(
-    difficulty: Literal["simple", "moderate", "complex"],
-    parser: PydanticOutputParser,
+    difficulty: Literal["simple", "moderate", "complex"], parser: PydanticOutputParser
 ):
     """Loads or generates a schema-driven prompt for the specified difficulty level.
 
@@ -53,8 +51,4 @@ def get_schema_driven_prompt(
         ]
     )
 
-    prompt = {"input_json": RunnablePassthrough()} | prompt_template.partial(
-        format_instructions=parser.get_format_instructions()
-    )
-
-    return prompt
+    return prompt_template.partial(format_instructions=parser.get_format_instructions())

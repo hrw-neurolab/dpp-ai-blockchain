@@ -36,7 +36,7 @@ BASE_TARGET = {
     "noise_level_dB": lambda: round(np.random.uniform(70, 90)),
     "worker_count": lambda: round(np.random.uniform(1, 4)),
     # categorical values
-    "lubrication_level": lambda: random.choice(["low", "medium", "high"]),
+    "lubrication_level": lambda: random.choice(["low", "moderate", "high"]),
     "cooling_system_status": lambda: random.choice(["operational", "faulty", "off"]),
     "maintenance_required": lambda: random.choice([True, False]),
     "fuel_type": lambda: random.choice(
