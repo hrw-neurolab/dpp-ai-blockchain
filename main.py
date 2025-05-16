@@ -47,8 +47,13 @@ if __name__ == "__main__":
         "--prompt",
         type=str,
         required=True,
-        choices=["few_shot", "schema_driven", "mapping_function"],
+        choices=["zero-shot", "few-shot", "mapping-function"],
         help="The prompt type to use for evaluation.",
+    )
+    parser.add_argument(
+        "--include-schema",
+        action="store_true",
+        help="Flag to indicate whether to include the schema in the prompt.",
     )
     parser.add_argument(
         "--difficulty",
@@ -91,6 +96,12 @@ if __name__ == "__main__":
         type=int,
         default=0,
         help="Maximum number of refinement attempts for the model.",
+    )
+    parser.add_argument(
+        "--structured-output",
+        type=str,
+        choices=["function_calling", "json_mode", "json_schema"],
+        help="Structured output mode for the model. Not applicable to `mapping-function` prompt.",
     )
 
     args = parser.parse_args()

@@ -1,14 +1,10 @@
-from typing import Literal
-
-from langchain.prompts import (
-    ChatPromptTemplate,
-    SystemMessagePromptTemplate,
-    HumanMessagePromptTemplate,
-)
+from langchain.prompts import ChatPromptTemplate, SystemMessagePromptTemplate
 from langchain.output_parsers import PydanticOutputParser
 
+from src.llm_mapping.prompts.base_prompt import HUMAN_PROMPT
 
-SYSTEM_PROMPT_SIMPLE = """
+
+SYSTEM_PROMPT = """\
 You are a data transformation assistant that processes raw telemetry data collected daily from industrial production machines. 
 Your job is to generate a python function that maps a raw input JSON into a structured, standardized JSON object.
 
@@ -22,44 +18,30 @@ The function should:
 
 {format_instructions}
 
-Provide only the function definition inside a markdown python code block and without any additional comments or explanations.
+Provide only the function definition inside a markdown python code block and without any additional comments or explanations.\
 """
 
-SYSTEM_PROMPTS = {
-    "simple": SYSTEM_PROMPT_SIMPLE,
-    "moderate": SYSTEM_PROMPT_SIMPLE,
-    "complex": SYSTEM_PROMPT_SIMPLE,
-}
 
-HUMAN_PROMPT = "{input_json}"
-
-
-def get_mapping_function_prompt(
-    difficulty: Literal["simple", "moderate", "complex"],
-    parser: PydanticOutputParser,
-):
+def get_mapping_function_prompt(parser: PydanticOutputParser):
     """Loads or generates a mapping function prompt for the specified difficulty level.
 
     Args:
-        difficulty (Literal["simple", "moderate", "complex"]): The difficulty level of the prompt.
         parser (PydanticOutputParser): The output parser to use.
 
     Returns:
         ChatPromptTemplate: The prompt template.
     """
-    system_prompt = SYSTEM_PROMPTS[difficulty]
-
     prompt_template = ChatPromptTemplate.from_messages(
         [
-            SystemMessagePromptTemplate.from_template(system_prompt),
-            HumanMessagePromptTemplate.from_template(HUMAN_PROMPT),
+            SystemMessagePromptTemplate.from_template(SYSTEM_PROMPT),
+            HUMAN_PROMPT,
         ]
     )
 
     format_instructions = parser.get_format_instructions()
     format_instructions = format_instructions.replace(
         "The output should be formatted as a JSON instance that conforms to the JSON schema below.",
-        "",
+        "The function output dict should conform to the JSON schema below.",
     ).strip()
 
     return prompt_template.partial(format_instructions=format_instructions)

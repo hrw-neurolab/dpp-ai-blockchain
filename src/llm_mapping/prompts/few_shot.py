@@ -1,77 +1,33 @@
 import json
 import os
-from typing import Literal
 
 from langchain.prompts import (
     ChatPromptTemplate,
     FewShotChatMessagePromptTemplate,
     SystemMessagePromptTemplate,
-    HumanMessagePromptTemplate,
 )
+from langchain.output_parsers import PydanticOutputParser
+from pydantic import BaseModel
+
 from src.dataset.preparation import generate_few_shot_examples
+from src.llm_mapping.prompts.base_prompt import SYSTEM_PROMPT, HUMAN_PROMPT
+from src.types import Difficulty
 
 
 EXAMPLE_PROMPT = ChatPromptTemplate.from_messages(
     [("human", "{input}"), ("ai", "{output}")]
 )
 
-SYSTEM_PROMPT_SIMPLE = """
-You are a data transformation assistant that processes raw telemetry data collected daily from industrial production machines. 
-Your job is to convert each raw input JSON into a structured, standardized JSON object with the following goals:
 
-- Extract and rename fields according to the target format.
-- Ensure units are correct and standardized (e.g., converting g to kg when necessary).
-- Ensure the data types are correct (e.g., converting strings to numbers).
-
-### STRICT OUTPUT FORMAT
-Return **ONLY** a single JSON object – NO markdown, NO code fences,
-NO comments. Use double quotes for every key and string. Keys must 
-match the target schema exactly. Any deviation will be rejected.
-
-Here are some examples:
-"""
-
-SYSTEM_PROMPT = """
-You are a data transformation assistant that processes raw telemetry data collected daily from industrial production machines. 
-Your job is to convert each raw input JSON into a structured, standardized JSON object with the following goals:
-
-- Extract and rename fields according to the target format.
-- Ensure units are correct and standardized (e.g., converting g to kg when necessary).
-- Ensure the data types are correct (e.g., converting strings to numbers).
-
-Valid values for the categorical fields are:
-- lubrication_level: "low", "moderate", "high"
-- cooling_system_status: "operational", "faulty", "off"
-- fuel_type: "electric", "fossil_fuel", "renewable_fuel", "hybrid"
-
-### STRICT OUTPUT FORMAT
-Return **ONLY** a single JSON object – NO markdown, NO code fences,
-NO comments. Use double quotes for every key and string. Keys must 
-match the target schema exactly. Any deviation will be rejected.
-
-Here are some examples:
-"""
-
-SYSTEM_PROMPTS = {
-    "simple": SYSTEM_PROMPT_SIMPLE,
-    "moderate": SYSTEM_PROMPT_SIMPLE,
-    "complex": SYSTEM_PROMPT_SIMPLE,
-}
-
-HUMAN_PROMPT = "{input_json}"
-
-
-def get_few_shot_prompt(
-    difficulty: Literal["simple", "moderate", "complex"], cache_dir: str
-):
-    """Loads or generates a few-shot prompt for the specified difficulty level.
+def get_few_shot_examples(difficulty: Difficulty, cache_dir: str):
+    """Generates or loads few-shot examples for the specified difficulty level.
 
     Args:
-        difficulty (str): The difficulty level of the prompt. Can be "simple", "moderate" or "complex".
+        difficulty (Difficulty): The difficulty level of the examples.
         cache_dir (str): The directory where the few-shot examples are stored.
 
     Returns:
-        ChatPromptTemplate: The few-shot prompt template.
+        list[dict]: A list of few-shot examples.
     """
     file_path = os.path.join(cache_dir, difficulty, f"few_shot_examples.json")
 
@@ -93,16 +49,77 @@ def get_few_shot_prompt(
         for example in examples
     ]
 
+    return examples
+
+
+def get_enum_fields_prompt(target_model: BaseModel):
+    """
+    Generate a prompt for the enum fields in the target model.
+
+    Args:
+        target_model (BaseModel): The target model class.
+
+    Returns:
+        str: The generated prompt.
+    """
+    prompt = "Valid options for the enum fields in the target model:"
+    schema = target_model.model_json_schema()
+
+    enum_defs = {}
+    for def_name, def_info in schema["$defs"].items():
+        if "enum" not in def_info:
+            continue
+
+        enum_defs[def_name] = def_info["enum"]
+
+    for field_name, field_info in schema["properties"].items():
+        if "$ref" not in field_info:
+            continue
+
+        enum_name = field_info["$ref"].split("/")[-1]
+        enum_values = enum_defs[enum_name]
+
+        prompt += f"\n- {field_name}: {json.dumps(enum_values)}"
+
+    return prompt
+
+
+def get_few_shot_prompt(
+    difficulty: Difficulty,
+    cache_dir: str,
+    parser: PydanticOutputParser,
+    include_enums: bool,
+):
+    """Loads or generates a few-shot prompt template for the specified difficulty level.
+
+    Args:
+        difficulty (Difficulty): The difficulty level of the prompt.
+        cache_dir (str): The directory where the few-shot examples are stored.
+        parser (PydanticOutputParser): The output parser to use.
+        include_enums (bool): Whether to include the enum options in the prompt.
+
+    Returns:
+        ChatPromptTemplate: The few-shot prompt template.
+    """
+    examples = get_few_shot_examples(difficulty, cache_dir)
     few_shot_prompt = FewShotChatMessagePromptTemplate(
         examples=examples,
         example_prompt=EXAMPLE_PROMPT,
     )
 
+    system_prompt = SYSTEM_PROMPT
+
+    if difficulty != "simple" and include_enums:
+        enum_fields_prompt = get_enum_fields_prompt(parser.pydantic_object)
+        system_prompt += f"\n\n{enum_fields_prompt}"
+
+    system_prompt += "\n\nHere are some examples:\n"
+
     prompt_template = ChatPromptTemplate.from_messages(
         [
-            SystemMessagePromptTemplate.from_template(SYSTEM_PROMPTS[difficulty]),
+            SystemMessagePromptTemplate.from_template(system_prompt),
             few_shot_prompt,
-            HumanMessagePromptTemplate.from_template(HUMAN_PROMPT),
+            HUMAN_PROMPT,
         ]
     )
 

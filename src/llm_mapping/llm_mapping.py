@@ -1,5 +1,4 @@
 import time
-from typing import Literal
 import re
 
 from langchain.output_parsers import PydanticOutputParser
@@ -12,50 +11,66 @@ from pydantic import ValidationError
 from src.llm_mapping.target_model import OUTPUT_PARSERS
 from src.llm_mapping.prompts import (
     get_few_shot_prompt,
-    get_schema_driven_prompt,
+    get_zero_shot_prompt,
     get_mapping_function_prompt,
 )
+from src.types import Difficulty, ModelProvider, PromptType, StructuredOutput
 
 
 class LlmMapping:
     def __init__(
         self,
-        provider: Literal["openai", "ollama"],
+        provider: ModelProvider,
         model_name: str,
-        prompt_type: Literal["few_shot", "schema_driven", "mapping_function"],
-        difficulty: Literal["simple", "moderate", "complex"],
+        prompt_type: PromptType,
+        include_schema: bool,
+        difficulty: Difficulty,
         cache_dir: str,
         ollama_host: str,
+        structured_output: StructuredOutput | None,
     ):
         """Initialize the LLM mapping class.
 
         Args:
-            provider ("openai" | "ollama"): The provider for the language model.
+            provider (LlmProvider): The provider for the language model.
             model_name (str): The model to use for evaluation.
-            prompt_type ("few_shot" | "schema_driven" | "mapping_function"): The type of prompt to use.
-            difficulty ("simple" | "moderate" | "complex"): The difficulty level of the dataset.
+            prompt_type (PromptType): The type of prompt to use.
+            include_schema (bool): Whether to include the schema in the prompt.
+            difficulty (Difficulty): The difficulty level of the dataset.
             cache_dir (str): The cache directory for storing the few-shot examples.
             ollama_host (str): The host for the Ollama model server.
+            structured_output (StructuredOutput | None): The type of structured output to use.
         """
         logger.info(f"Initializing LLM: {provider} - {model_name}")
         self.__init_llm(provider, model_name, ollama_host)
 
         self.prompt_type = prompt_type
+        self.include_schema = include_schema
         self.difficulty = difficulty
         self.cache_dir = cache_dir
+        self.structured_output = structured_output
 
         self.parser: PydanticOutputParser = OUTPUT_PARSERS[difficulty]
 
-        logger.info(f"Initializing prompt template: {prompt_type}")
+        logger.info(
+            f"Initializing prompt template: {prompt_type}, include_schema: {include_schema}"
+        )
         self.__init_prompt()
+
+        if self.prompt_type != "mapping-function" and structured_output is not None:
+            self.llm = self.llm.with_structured_output(
+                self.parser.pydantic_object,
+                method=structured_output,
+                include_raw=True,
+            )
 
         self.chain = self.prompt | self.llm
 
-    def __init_llm(self, provider: str, model_name: str, ollama_host: str):
+    def __init_llm(self, provider: ModelProvider, model_name: str, ollama_host: str):
         """Initialize the LLM based on the provider and model name.
 
         Args:
-            provider (str): The provider for the language model.
+            provider (LlmProvider): The provider for the language model.
             model_name (str): The model to use for evaluation.
             ollama_host (str): The host for the Ollama model server.
         """
@@ -77,24 +92,26 @@ class LlmMapping:
             )
         else:
             raise ValueError(
-                f"Invalid model type: {model_name}. Supported models are 'gpt' and 'ollama'."
+                f"Invalid provider: {provider}. Supported providers are 'openai' and 'ollama'."
             )
 
     def __init_prompt(self):
         """Initialize the prompt based on the provided type."""
-        if self.prompt_type == "few_shot":
-            self.prompt = get_few_shot_prompt(self.difficulty, self.cache_dir)
+        if self.prompt_type == "zero-shot":
+            self.prompt = get_zero_shot_prompt(self.parser, self.include_schema)
 
-        elif self.prompt_type == "schema_driven":
-            self.prompt = get_schema_driven_prompt(self.difficulty, self.parser)
+        elif self.prompt_type == "few-shot":
+            self.prompt = get_few_shot_prompt(
+                self.difficulty, self.cache_dir, self.parser, self.include_schema
+            )
 
-        elif self.prompt_type == "mapping_function":
-            self.prompt = get_mapping_function_prompt(self.difficulty, self.parser)
+        elif self.prompt_type == "mapping-function":
+            self.prompt = get_mapping_function_prompt(self.parser)
 
         else:
             raise ValueError(
                 f"Invalid prompt type: {self.prompt_type}. "
-                "Supported types are 'few_shot', 'schema_driven', and 'mapping_function'."
+                "Supported types are 'zero-shot', 'few-shot', and 'mapping-function'."
             )
 
     @staticmethod
@@ -131,6 +148,9 @@ class LlmMapping:
 
         try:
             response = self.chain.invoke(template_vars)
+
+            if self.structured_output is not None:
+                response = response["raw"]
 
             token_usage = response.usage_metadata
             result["input_tokens"] = token_usage["input_tokens"]

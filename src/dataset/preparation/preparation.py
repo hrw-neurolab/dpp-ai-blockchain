@@ -1,5 +1,4 @@
 import random
-from typing import Literal
 from datetime import datetime, timedelta
 
 import numpy as np
@@ -9,6 +8,7 @@ from src.dataset.preparation import (
     PERTURBATION_FUNCTIONS_MODERATE,
     PERTURBATION_FUNCTIONS_COMPLEX,
 )
+from src.types import Difficulty
 
 
 BASE_TARGET_SIMPLE = {
@@ -52,14 +52,12 @@ PERTURBATION_FUNCTIONS = {
 }
 
 
-def generate_target_sample(
-    date: datetime, difficulty: Literal["simple", "moderate", "complex"]
-) -> dict:
+def generate_target_sample(date: datetime, difficulty: Difficulty) -> dict:
     """Generates a target sample for a given date.
 
     Args:
         date (datetime): The date for which to generate the sample.
-        difficulty (Literal["simple", "moderate", "complex"]): The difficulty level of the sample.
+        difficulty (Difficulty): The difficulty level of the sample.
 
     Returns:
         dict: A dictionary containing the generated sample.
@@ -72,17 +70,17 @@ def generate_target_sample(
     }
 
 
-def all_days_in_year_datetime(year: int):
-    """Generates all days in a given year as datetime objects.
+def all_days_datetime(year: int):
+    """Generates the first 6 months in a given year as datetime objects.
 
     Args:
         year (int): The year for which to generate the dates.
 
     Yields:
-        datetime: A datetime object representing each day in the year.
+        datetime: A datetime object representing each day.
     """
     start_date = datetime(year, 1, 1)
-    end_date = datetime(year + 1, 1, 1)
+    end_date = datetime(year, 7, 1)
     delta = timedelta(days=1)
 
     current_date = start_date
@@ -91,13 +89,11 @@ def all_days_in_year_datetime(year: int):
         current_date += delta
 
 
-def generate_dataset(
-    difficulty: Literal["simple", "moderate", "complex"],
-) -> tuple[dict, dict]:
+def generate_dataset(difficulty: Difficulty) -> tuple[dict, dict]:
     """Generates a dataset of target and source samples.
 
     Args:
-        difficulty (Literal["simple", "moderate", "complex"]): The difficulty level of the dataset.
+        difficulty (Difficulty): The difficulty level of the dataset.
 
     Returns:
         tuple: A tuple containing the source and target datasets.
@@ -115,7 +111,7 @@ def generate_dataset(
         target_dataset[machine_id] = []
         source_dataset[machine_id] = []
 
-        for day in all_days_in_year_datetime(2024):
+        for day in all_days_datetime(2024):
             target_sample = generate_target_sample(day, difficulty)
             target_dataset[machine_id].append(target_sample)
 
@@ -125,13 +121,11 @@ def generate_dataset(
     return source_dataset, target_dataset
 
 
-def generate_few_shot_examples(
-    difficulty: Literal["simple", "moderate", "complex"],
-) -> list[dict]:
+def generate_few_shot_examples(difficulty: Difficulty) -> list[dict]:
     """Generates 5 few-shot examples for the dataset.
 
     Args:
-        difficulty (Literal["simple", "moderate", "complex"]): The difficulty level of the dataset.
+        difficulty (Difficulty): The difficulty level of the dataset.
 
     Returns:
         list: A list of dictionaries containing the few-shot examples.

@@ -1,10 +1,9 @@
-kagglehub
 numpy
 pandas
 ipykernel
 scikit-learn
 langchain[openai, ollama]
-pywaves
+pywaves-ce
 python-dotenv
 loguru
 matplotlib

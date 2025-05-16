@@ -1,23 +1,23 @@
 import os
 import json
-from typing import Literal
 
 from loguru import logger
 
 from src.dataset.preparation import generate_dataset
+from src.types import Difficulty
 
 
 class MappingDataset:
     def __init__(
         self,
-        difficulty: Literal["simple", "moderate", "complex"],
+        difficulty: Difficulty,
         cache_dir: str,
         num_samples: int | None = None,
     ):
         """Initializes the MappingDataset class.
 
         Args:
-            difficulty (str): The difficulty level of the dataset. Can be "simple" or "complex".
+            difficulty (Difficulty): The difficulty level of the dataset.
             cache_dir (str): The directory where the dataset will be cached.
             num_samples (int, optional): The number of samples to use. Defaults to None.
         """

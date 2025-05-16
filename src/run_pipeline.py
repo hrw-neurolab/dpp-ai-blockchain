@@ -23,7 +23,7 @@ class RunPipeline:
         self.args = args
         self.__init_run_dir()
 
-        num_samples = 1 if args.prompt == "mapping_function" else args.num_samples
+        num_samples = 1 if args.prompt == "mapping-function" else args.num_samples
 
         self.dataset = MappingDataset(args.difficulty, args.cache_dir, num_samples)
         self.__init_llm_mapping()
@@ -38,7 +38,7 @@ class RunPipeline:
         run_name_parts = [
             time.strftime("%Y-%m-%d_%H-%M-%S"),
             self.args.difficulty,
-            self.args.prompt.replace("_", "-"),
+            self.args.prompt,
         ]
         run_name = "_".join(run_name_parts)
 
@@ -66,16 +66,23 @@ class RunPipeline:
             self.args.model_provider,
             self.args.model_name,
             self.args.prompt,
+            self.args.include_schema,
             self.args.difficulty,
             self.args.cache_dir,
             self.args.ollama_host,
+            self.args.structured_output,
         )
 
         max_attempts = self.args.max_refinement_attempts
 
-        if max_attempts > 0:
-            self.llm_mapping = IterativeRefiner(self.llm_mapping, max_attempts)
-            logger.info(f"Refinement attempts set to {max_attempts}.")
+        if max_attempts <= 0:
+            return
+
+        if self.args.model_provider != "ollama":
+            raise ValueError("Iterative refinement is intended for Ollama models only.")
+
+        self.llm_mapping = IterativeRefiner(self.llm_mapping, max_attempts)
+        logger.info(f"Refinement attempts set to {max_attempts}.")
 
     def __save_config(self):
         config_file_path = os.path.join(self.run_dir, "config.json")
@@ -181,17 +188,17 @@ class RunPipeline:
         """Run the pipeline based on the specified prompt type."""
         logger.info("Starting pipeline")
 
-        if self.args.prompt in ["few_shot", "schema_driven"]:
-            self.__run_direct_mapping()
-        else:
+        if self.args.prompt == "mapping-function":
             self.__run_function_mapping()
+        else:
+            self.__run_direct_mapping()
 
     @logger.catch(reraise=True)
     def evaluate(self):
         """Evaluate the results based on the specified prompt type."""
         logger.info("Starting evaluation")
 
-        if self.args.prompt in ["few_shot", "schema_driven"]:
-            evaluate_direct_mapping(self.run_dir)
-        else:
+        if self.args.prompt == "mapping-function":
             evaluate_mapping_function(self.run_dir)
+        else:
+            evaluate_direct_mapping(self.run_dir)

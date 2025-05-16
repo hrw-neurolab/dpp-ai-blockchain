@@ -3,6 +3,8 @@ from enum import Enum
 from pydantic import BaseModel, Field
 from langchain.output_parsers import PydanticOutputParser
 
+from src.types import Difficulty
+
 
 class TargetModelSimple(BaseModel):
     date: str = Field(
@@ -81,7 +83,7 @@ class TargetModel(TargetModelSimple):
     fuel_type: FuelType = Field(description="Type of fuel used by the machine.")
 
 
-OUTPUT_PARSERS = {
+OUTPUT_PARSERS: dict[Difficulty, PydanticOutputParser] = {
     "simple": PydanticOutputParser(pydantic_object=TargetModelSimple),
     "moderate": PydanticOutputParser(pydantic_object=TargetModel),
     "complex": PydanticOutputParser(pydantic_object=TargetModel),
