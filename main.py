@@ -8,7 +8,11 @@ from src.run_pipeline import RunPipeline
 
 
 def main(args):
-    pipeline = RunPipeline(args)
+    if args.resume is not None:
+        pipeline = RunPipeline.from_run_dir(args.resume)
+    else:
+        pipeline = RunPipeline(args)
+
     pipeline.run()
     pipeline.evaluate()
 
@@ -30,6 +34,17 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="This script performs an evaluation of LLM JSON mapping capabilities."
     )
+    parser.add_argument(
+        "--resume",
+        type=str,
+        help="The path to a previous run's output directory to resume from.",
+    )
+
+    if "--resume" in sys.argv:
+        args = parser.parse_args()
+        main(args)
+        sys.exit(0)
+
     parser.add_argument(
         "--model-provider",
         type=str,

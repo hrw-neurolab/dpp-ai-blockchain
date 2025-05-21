@@ -14,21 +14,22 @@ from src.llm_mapping.iterative_refiner import IterativeRefiner
 
 class RunPipeline:
     @logger.catch(reraise=True)
-    def __init__(self, args: Namespace):
+    def __init__(self, args: Namespace, is_continue: bool = False):
         """Initialize the RunPipeline class.
 
         Args:
             args (Namespace): CLI arguments containing configuration options.
+            is_continue (bool): Only used when continuing from a previous run.
         """
         self.args = args
-        self.__init_run_dir()
-
-        num_samples = 1 if args.prompt == "mapping-function" else args.num_samples
-
-        self.dataset = MappingDataset(args.difficulty, args.cache_dir, num_samples)
-        self.__init_llm_mapping()
-
         self.metric_caller = MetricCaller()
+
+        if is_continue:
+            return
+
+        self.__init_run_dir()
+        self.__init_dataset()
+        self.__init_llm_mapping()
 
         self.__save_config()
         self.__save_prompt()
@@ -59,6 +60,15 @@ class RunPipeline:
             "-> <level>{message}</level>",
         )
         logger.info(f"Run directory created: {self.run_dir}")
+
+    def __init_dataset(self):
+        """Initialize the dataset based on the specified difficulty level and last index."""
+        num_samples = (
+            1 if self.args.prompt == "mapping-function" else self.args.num_samples
+        )
+        self.dataset = MappingDataset(
+            self.args.difficulty, self.args.cache_dir, num_samples
+        )
 
     def __init_llm_mapping(self):
         """Initialize the LLM mapping based on the specified model provider and prompt type."""
@@ -99,6 +109,16 @@ class RunPipeline:
         with open(prompt_file_path, "w") as f:
             f.write(formatted_prompt)
 
+    def __save_last_index(self, index: int):
+        """Save the last dataset index to a file.
+
+        Args:
+            index (int): The index to be saved (zero-indexed).
+        """
+        index_file_path = os.path.join(self.run_dir, "last_index.txt")
+        with open(index_file_path, "w") as f:
+            f.write(str(index))
+
     def __push_to_blockchain(self, machine_id: str, data: dict) -> tuple[str, int]:
         """Push the parsed data to the blockchain.
 
@@ -123,7 +143,7 @@ class RunPipeline:
         """
         total_samples = len(self.dataset)
 
-        for index, (machine_id, source, target) in enumerate(self.dataset):
+        for index, machine_id, source, target in self.dataset:
             prefix = f"[{index + 1:03}/{total_samples}: {machine_id}]"
 
             result = {"source": source, "target": target}
@@ -153,6 +173,8 @@ class RunPipeline:
             with open(file_path, "a") as f:
                 f.write(json.dumps(result) + "\n")
 
+            self.__save_last_index(index)
+
         if self.args.blockchain:
             logger.info(f"Aggregating metrics for date: {target['date']}")
             self.metric_caller.call_aggregate_metrics(target["date"])
@@ -165,7 +187,7 @@ class RunPipeline:
         """
         total_samples = len(self.dataset)
 
-        for index, (machine_id, source, target) in enumerate(self.dataset):
+        for index, machine_id, source, target in self.dataset:
             logger.info(
                 f"[{index + 1:03}/{total_samples}: {machine_id}] Generating mapping function"
             )
@@ -182,6 +204,58 @@ class RunPipeline:
             file_path = os.path.join(self.raw_results_dir, f"{machine_id}.json")
             with open(file_path, "w") as f:
                 json.dump(result, f, indent=4)
+
+            self.__save_last_index(index)
+
+    @classmethod
+    def from_run_dir(cls, run_dir: str):
+        """Create an instance of RunPipeline from a given run directory.
+
+        Args:
+            run_dir (str): The path to the run directory.
+
+        Returns:
+            RunPipeline: An instance of the RunPipeline class.
+        """
+        if not os.path.exists(run_dir):
+            raise ValueError(f"Path `{run_dir}` does not exist.")
+
+        # Load the configuration
+        config_file_path = os.path.join(run_dir, "config.json")
+        with open(config_file_path, "r") as f:
+            args = json.load(f)
+        args = Namespace(**args)
+        run_pipeline = cls(args, True)
+
+        # Set the dirs and add the logger
+        run_pipeline.run_dir = run_dir
+        run_pipeline.raw_results_dir = os.path.join(run_dir, "raw_results")
+
+        log_file_path = os.path.join(run_dir, "run.log")
+        logger.add(
+            log_file_path,
+            format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> "
+            "| <level>{level: <8}</level> "
+            "| <cyan>{file: <15}</cyan>:<cyan>{line: <3}</cyan> "
+            "-> <level>{message}</level>",
+        )
+
+        # Init the dataset and load the last index + 1
+        run_pipeline.__init_dataset()
+        last_index_file_path = os.path.join(run_dir, "last_index.txt")
+        if not os.path.exists(last_index_file_path):
+            raise FileNotFoundError(f"Path {run_dir} does not contain last_index.txt.")
+
+        with open(last_index_file_path, "r") as f:
+            last_index = int(f.read().strip())
+        run_pipeline.dataset.set_index(last_index + 1)
+
+        # Init the llm mapping
+        run_pipeline.__init_llm_mapping()
+        logger.info(f"Successfully loaded run pipeline from {run_dir}")
+        logger.info(f"Resuming from index: {last_index + 1}")
+
+        return run_pipeline
 
     @logger.catch(reraise=True)
     def run(self):

@@ -98,7 +98,7 @@ class MappingDataset:
     def __iter__(self):
         return self
 
-    def __next__(self) -> tuple[str, dict, dict]:
+    def __next__(self) -> tuple[int, str, dict, dict]:
         if self.__idx >= len(self):
             raise StopIteration
 
@@ -106,6 +106,7 @@ class MappingDataset:
         sample_idx = self.__idx // len(self.machine_ids)
 
         sample = (
+            self.__idx,
             machine_id,
             self.source[machine_id][sample_idx],
             self.target[machine_id][sample_idx],
@@ -113,3 +114,16 @@ class MappingDataset:
 
         self.__idx += 1
         return sample
+
+    def set_index(self, index: int):
+        """Set the current index for iteration.
+
+        Args:
+            index (int): The index to set.
+        """
+        if index < 0 or index >= len(self):
+            raise IndexError("Index out of range.")
+
+        self.__idx = index
+
+        logger.warning(f"Dataset index set to {self.__idx}.")
