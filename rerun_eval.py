@@ -3,11 +3,11 @@ import argparse
 import os
 import shutil
 import sys
-from typing import Literal
 
 from loguru import logger
 
 from src.evaluation.evaluation import evaluate_direct_mapping, evaluate_mapping_function
+from src.types import PromptType
 
 
 def init_loguru(run_dir: str):
@@ -75,14 +75,14 @@ def run_evaluation(run_dir: str):
     with open(config_file, "r") as f:
         config = json.load(f)
 
-    prompt: Literal["schema_driven", "few_shot", "mapping_function"] = config["prompt"]
+    prompt: PromptType = config["prompt"]
 
     # Run the evaluation based on the prompt type
-    if prompt in ["schema_driven", "few_shot"]:
-        evaluate_direct_mapping(run_dir)
+    if prompt == "mapping-function":
+        evaluate_mapping_function(run_dir)
         return
 
-    evaluate_mapping_function(run_dir)
+    evaluate_direct_mapping(run_dir)
 
 
 def main(run_dir: str):

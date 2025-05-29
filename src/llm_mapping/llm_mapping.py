@@ -313,7 +313,7 @@ class LlmMapping:
         Returns:
             A dictionary containing the results.
         """
-        if self.prompt_type == "mapping_function":
+        if self.prompt_type == "mapping-function":
             return self.__process_mapping_function(template_vars, source)
 
         return self.__process_direct_mapping(template_vars)

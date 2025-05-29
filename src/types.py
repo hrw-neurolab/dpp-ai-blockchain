@@ -4,7 +4,7 @@ from typing import Literal
 ModelProvider = Literal["openai", "ollama"]
 """Options for the Model provider."""
 
-PromptType = Literal["zero_shot", "few_shot", "mapping_function"]
+PromptType = Literal["zero-shot", "few-shot", "mapping-function"]
 """Options for the type of prompt used."""
 
 Difficulty = Literal["simple", "moderate", "complex"]

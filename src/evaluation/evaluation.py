@@ -1,6 +1,7 @@
 import os
 import json
 from dataclasses import asdict
+import re
 
 from langchain_core.utils.json import parse_json_markdown
 from loguru import logger
@@ -32,6 +33,15 @@ def _evaluate_validation_error(
             continue
 
         stats.parsed_fields.correct += 1
+
+
+def _strip_thinking_tags(response_raw: str) -> str:
+    return re.sub(
+        r"<think>.*?</think>\s*",
+        "",
+        response_raw,
+        flags=re.DOTALL,
+    ).strip()
 
 
 def evaluate_direct_mapping(run_dir: str):
@@ -110,7 +120,8 @@ def evaluate_direct_mapping(run_dir: str):
                 )
                 continue
 
-            output = parse_json_markdown(mapping_result["response_raw"])
+            output = _strip_thinking_tags(mapping_result["response_raw"])
+            output = parse_json_markdown(output)
             stats.parsed_fields.total += len(output)
 
             if mapping_result["error_type"] == "PYDANTIC_VALIDATION_ERROR":
