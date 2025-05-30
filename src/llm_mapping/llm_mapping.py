@@ -8,7 +8,7 @@ from langchain_ollama import ChatOllama
 from loguru import logger
 from pydantic import ValidationError
 
-from src.llm_mapping.target_model import OUTPUT_PARSERS
+from src.llm_mapping.target_model import OUTPUT_PARSERS, wrap_thinking_model
 from src.llm_mapping.prompts import (
     get_few_shot_prompt,
     get_zero_shot_prompt,
@@ -28,6 +28,7 @@ class LlmMapping:
         cache_dir: str,
         ollama_host: str,
         structured_output: StructuredOutput | None,
+        wrap_thinking: bool = False,
     ):
         """Initialize the LLM mapping class.
 
@@ -40,6 +41,7 @@ class LlmMapping:
             cache_dir (str): The cache directory for storing the few-shot examples.
             ollama_host (str): The host for the Ollama model server.
             structured_output (StructuredOutput | None): The type of structured output to use.
+            wrap_thinking (bool): Whether to wrap the thinking process in a separate field (Only for structured output).
         """
         logger.info(f"Initializing LLM: {provider} - {model_name}")
         self.__init_llm(provider, model_name, ollama_host)
@@ -49,6 +51,7 @@ class LlmMapping:
         self.difficulty = difficulty
         self.cache_dir = cache_dir
         self.structured_output = structured_output
+        self.wrap_thinking = wrap_thinking
 
         self.parser: PydanticOutputParser = OUTPUT_PARSERS[difficulty]
 
@@ -58,8 +61,14 @@ class LlmMapping:
         self.__init_prompt()
 
         if self.prompt_type != "mapping-function" and structured_output is not None:
+            target_model = self.parser.pydantic_object
+
+            if wrap_thinking:
+                # Wrap the thinking process in a separate field
+                target_model = wrap_thinking_model(target_model)
+
             self.llm = self.llm.with_structured_output(
-                self.parser.pydantic_object,
+                target_model,
                 method=structured_output,
                 include_raw=True,
             )
@@ -175,6 +184,9 @@ class LlmMapping:
             # a mismatched closing character in the JSON string.
             if parsed is None:
                 raise Exception("JSON String has a mismatched closing character.")
+
+            if self.structured_output and self.wrap_thinking:
+                parsed = parsed["response"]
 
             parsed = self.parser.pydantic_object.model_validate(parsed)
             result["response_parsed"] = parsed.model_dump()

@@ -81,6 +81,7 @@ class RunPipeline:
             self.args.cache_dir,
             self.args.ollama_host,
             self.args.structured_output,
+            self.args.wrap_thinking,
         )
 
         max_attempts = self.args.max_refinement_attempts
@@ -175,9 +176,9 @@ class RunPipeline:
 
             self.__save_last_index(index)
 
-        if self.args.blockchain:
-            logger.info(f"Aggregating metrics for date: {target['date']}")
-            self.metric_caller.call_aggregate_metrics(target["date"])
+            if self.args.blockchain and self.dataset.is_last_machine():
+                logger.info(f"Aggregating metrics for date: {target['date']}")
+                self.metric_caller.call_aggregate_metrics(target["date"])
 
     def __run_function_mapping(self):
         """Run the mapping process once for each machine using the `mapping-function` prompt.

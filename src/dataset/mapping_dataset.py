@@ -127,3 +127,11 @@ class MappingDataset:
         self.__idx = index
 
         logger.warning(f"Dataset index set to {self.__idx}.")
+
+    def is_last_machine(self) -> bool:
+        """Check if the current machine is the last one in the iteration.
+
+        Returns:
+            bool: True if the current machine is the last one, False otherwise.
+        """
+        return self.__idx % len(self.machine_ids) == 0

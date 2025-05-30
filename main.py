@@ -118,6 +118,11 @@ if __name__ == "__main__":
         choices=["function_calling", "json_mode", "json_schema"],
         help="Structured output mode for the model. Not applicable to `mapping-function` prompt.",
     )
+    parser.add_argument(
+        "--wrap-thinking",
+        action="store_true",
+        help="Whether to wrap the thinnking content in a seperate field in the output. (Only for structured output modes)",
+    )
 
     args = parser.parse_args()
     main(args)

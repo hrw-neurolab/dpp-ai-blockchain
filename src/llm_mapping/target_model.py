@@ -1,6 +1,6 @@
 from enum import Enum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, create_model
 from langchain.output_parsers import PydanticOutputParser
 
 from src.types import Difficulty
@@ -88,3 +88,8 @@ OUTPUT_PARSERS: dict[Difficulty, PydanticOutputParser] = {
     "moderate": PydanticOutputParser(pydantic_object=TargetModel),
     "complex": PydanticOutputParser(pydantic_object=TargetModel),
 }
+
+
+def wrap_thinking_model(pydantic_model: type[BaseModel]) -> type[BaseModel]:
+    """Wraps a Pydantic model with a thinking field."""
+    return create_model("ThinkingResponse", thinking=str, response=pydantic_model)

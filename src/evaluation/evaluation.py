@@ -122,6 +122,12 @@ def evaluate_direct_mapping(run_dir: str):
 
             output = _strip_thinking_tags(mapping_result["response_raw"])
             output = parse_json_markdown(output)
+
+            if "response" in output:
+                # The output is wrapped in a Thinking Response
+                # Only for Reasoning Models in combination with structured output
+                output = output["response"]
+
             stats.parsed_fields.total += len(output)
 
             if mapping_result["error_type"] == "PYDANTIC_VALIDATION_ERROR":
