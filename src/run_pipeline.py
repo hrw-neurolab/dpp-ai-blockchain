@@ -7,7 +7,7 @@ from loguru import logger
 
 from src.dataset.mapping_dataset import MappingDataset
 from src.llm_mapping import LlmMapping
-from src.blockchain.WavesConnector import MetricCaller
+from src.blockchain.blockchain_connector.waves_connector import WavesConnector
 from src.evaluation import evaluate_direct_mapping, evaluate_mapping_function
 from src.llm_mapping.iterative_refiner import IterativeRefiner
 
@@ -22,7 +22,7 @@ class RunPipeline:
             is_continue (bool): Only used when continuing from a previous run.
         """
         self.args = args
-        self.metric_caller = MetricCaller()
+        self.waves_connector = WavesConnector()
 
         if is_continue:
             return
@@ -130,10 +130,10 @@ class RunPipeline:
         Returns:
             tuple[str, int]: A tuple containing the transaction ID and height.
         """
-        tx = self.metric_caller.call_store_metrics(machine_id, data)
-        tx_info = self.metric_caller.wait_for_transaction(tx)
+        tx_id = self.waves_connector.call_store_metrics(machine_id, data)
+        tx_info = self.waves_connector.wait_for_transaction(tx_id)
 
-        return tx["id"], tx_info["height"]
+        return tx_id, tx_info["height"]
 
     def __run_direct_mapping(self):
         """Run the mapping process for each machine and sample.
@@ -178,7 +178,7 @@ class RunPipeline:
 
             if self.args.blockchain and self.dataset.is_last_machine():
                 logger.info(f"Aggregating metrics for date: {target['date']}")
-                self.metric_caller.call_aggregate_metrics(target["date"])
+                self.waves_connector.call_aggregate_metrics(target["date"])
 
     def __run_function_mapping(self):
         """Run the mapping process once for each machine using the `mapping-function` prompt.
@@ -211,6 +211,7 @@ class RunPipeline:
     @classmethod
     def from_run_dir(cls, run_dir: str):
         """Create an instance of RunPipeline from a given run directory.
+        Useful for resuming a previous run.
 
         Args:
             run_dir (str): The path to the run directory.
