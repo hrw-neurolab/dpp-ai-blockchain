@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-This repository implements a full pipeline to simulate the AI-assisted mapping of Digital Product Passport (DPP) data, which is gathered from 10 imaginary production machines over a one-year period and then stored on the Waves Blockchain. The goal is to measure an LLMs reliability in mapping dynamic and unstructured JSON data at a large scale into a standardized target JSON format, while assessing 3 different prompting techniques. The correctly mapped data points will be stored on a public ledger using smart contracts to present a tamper-evident storage solution for DPP-data. The entire process is monitored to investigate the speed and overall applicability of such a solution in real production environments.
+This repository implements a full pipeline to simulate the AI-assisted mapping of Digital Product Passport (DPP) data, which is gathered from 10 imaginary production machines over a six-month period and then stored on the Waves Blockchain. The dataset is automatically generated and cached on the first run. The goal is to measure an LLM's reliability in mapping dynamic and unstructured JSON data at a large scale into a standardized target JSON format, while assessing 3 different prompting techniques. The correctly mapped data points will be stored on a public ledger using smart contracts to present a tamper-evident storage solution for DPP-data. The entire process is monitored to investigate the speed and overall applicability of such a solution in real production environments.
 
 ## 📘 Detailed Description of the Repository
 
@@ -13,14 +13,20 @@ The repository includes the following implementations:
     Dataset Preparation
   </summary>
 
-- Downloading the open-source Kaggle dataset ["sustainable-manufacturing-large-data"](https://www.kaggle.com/datasets/lastman0800/sustainable-manufacturing-large-data)
-- Cleaning up the duplicated data, resulting in 1 sample for each of the 10 machines
-- Generating imaginary time-series data based on the given mean and standard deviation, resulting in 365 samples for each of the 10 machines (one datapoint per machine per day)
-- Generating the target dataset based on a standardized JSON format for all samples
-- Generating the source dataset: The original JSON data is augmented to simulate a scenario, where each machine is subject to a specific schema variation, resulting in 10 different schema variations which the LLM has to map to the target schema
+- The dataset is **automatically generated** on the first run and then **cached** for subsequent use
+- Synthetic time-series data is generated for 10 imaginary production machines, covering the first 6 months of 2024 (approximately 180 samples per machine, one datapoint per machine per day)
+- The target dataset follows a standardized JSON format for all samples, containing metrics such as:
+  - Energy consumption, material usage, CO2 emissions, water consumption
+  - Operating parameters (temperature, humidity, vibration, etc.)
+  - Production output and maintenance status
+- The source dataset simulates real-world scenarios where each machine is subject to a specific schema variation, resulting in 10 different schema variations which the LLM has to map to the target schema
 - Three main properties are varied throughout the data: `Field Name (key)`, `Value Type` and `Value Unit`
-- For easier comprehension of the dataset preparation process, the script is written as a Jupyter Notebook, which allows a step-by-step execution of the individual code cells
-- To ensure reproducibility, a global seed of `42` was used in numpy for generating the random perturbations
+- Three difficulty levels are provided: `simple`, `moderate`, and `complex`, each with varying degrees of schema variations and complexity:
+  - **Simple**: Basic schema variations with 8 core metrics
+  - **Moderate**: Extended schema with 16 metrics and more complex variations
+  - **Complex**: Full complexity with all metrics and advanced perturbations
+- The prepared datasets are automatically stored in `data/{difficulty}/` directories, with separate files for source data, target data, and few-shot examples
+- To ensure reproducibility, a global seed of `42` is used in numpy and random for generating the synthetic data and perturbations
 
 </details>
 
@@ -30,11 +36,13 @@ The repository includes the following implementations:
   </summary>
 
 - Three types of prompts are investigated:
-  - Schema-based prompting: The LLM shall directly map new incoming JSON data given a target schema description (based on the Pydantic model)
-  - Few-shot prompting: The LLM shall directly map new incoming JSON data given 4 examples of correct mappings between source and target samples
+  - Zero-shot prompting: The LLM shall directly map new incoming JSON data, optionally given a target schema description (based on the Pydantic model)
+  - Few-shot prompting: The LLM shall directly map new incoming JSON data given examples of correct mappings between source and target samples
   - Mapping-function prompting: The LLM shall generate one python function for each of the 10 variations, which then can be used to correctly map all inputs to the target format. The prompt includes basic instructions and the target schema (based on the Pydantic model)
 - The script uses the [Langchain library](https://python.langchain.com/) to dynamically generate the prompts based on predefined templates and invoke the LLM accordingly
 - To compare different LLMs, the script (currently) includes models provided by OpenAI and locally served models via ollama, but can theoretically be extended to all models supported by Langchain
+- Supports multiple structured output modes: `function_calling`, `json_mode`, and `json_schema` for better output control
+- Includes an iterative refinement mechanism for Ollama models to improve mapping accuracy through multiple attempts
 - To ensure proper evaluation, each raw result is stored locally in `.jsonl` or `.json` format, along with the configuration and prompt template of the experiment
 
 </details>
@@ -111,7 +119,7 @@ pip install -r requirements.txt
 cp .env.example .env
 # Paste your OpenAI API Key
 
-cp WavesConnector/.env.example WavesConnector/.env
+cp src/blockchain/blockchain_connector/.env.example src/blockchain/blockchain_connector/.env
 # Paste your Waves seed
 ```
 
@@ -121,27 +129,72 @@ cp WavesConnector/.env.example WavesConnector/.env
 ollama pull gemma3:4b
 ```
 
-### Dataset Recreation
+Alternatively, you can use Docker Compose to run multiple Ollama instances with GPU support:
 
-Even though the dataset files are already located in this repository, you may want to comprehend the creation process.
-To exactly recreate the dataset files, which are stored at `dataset/*.json`, open up the [Jupyter Notebook](dataset/preparation.ipynb). Now, either execute every cell one-by-one or click on `Run All`.
+```bash
+docker-compose -f docker-compose.ollama.yml up -d
+```
 
 ## 🚀 Usage
 
 The script can be executed by running `python main.py`. To ensure full flexibility, the command accepts multiple flags, of which some are required to be set:
 
+### Required Arguments
+
 ```
---output-dir OUTPUT_DIR
-                      Directory to save the processed output files.
---model-provider {openai,ollama} *required
+--model-provider {openai,ollama}
                       The provider of the LLM model to use for evaluation.
---model-name MODEL_NAME *required
+--model-name MODEL_NAME
                       The name of the LLM model to use for evaluation.
---prompt {few_shot,schema_driven,mapping_function} *required
+--prompt {zero-shot,few-shot,mapping-function}
                       The prompt type to use for evaluation.
---single-sample       Run the evaluation on a single sample instead of the entire dataset.
+--difficulty {simple,moderate,complex}
+                      The difficulty level of the dataset to use for evaluation.
+```
+
+### Optional Arguments
+
+```
+--resume RESUME       The path to a previous run's output directory to resume from.
+--include-schema      Flag to indicate whether to include the schema in the prompt.
+--output-dir OUTPUT_DIR
+                      Directory to save the processed output files. (default: ./output)
+--cache-dir CACHE_DIR
+                      Directory to cache the datasets and few-shot prompts. (default: ./data)
+--num-samples NUM_SAMPLES
+                      Number of samples to use for evaluation. If None, all samples will be used.
+--blockchain          Flag to indicate whether to push the parsed data to the blockchain.
+--ollama-host OLLAMA_HOST
+                      Host address for the Ollama model server. (default: 127.0.0.1:11434)
+--max-refinement-attempts MAX_REFINEMENT_ATTEMPTS
+                      Maximum number of refinement attempts for the model. (default: 0)
+--structured-output {function_calling,json_mode,json_schema}
+                      Structured output mode for the model. Not applicable to `mapping-function` prompt.
+--wrap-thinking       Whether to wrap the thinking content in a separate field in the output.
+                      (Only for structured output modes)
+```
+
+### Examples
+
+Basic usage with OpenAI:
+```bash
+python main.py --model-provider openai --model-name gpt-4o --prompt zero-shot --difficulty simple
+```
+
+Using Ollama with few-shot prompting and schema:
+```bash
+python main.py --model-provider ollama --model-name gemma3:12b --prompt few-shot --difficulty moderate --include-schema
+```
+
+With blockchain integration and limited samples:
+```bash
+python main.py --model-provider openai --model-name gpt-4o --prompt mapping-function --difficulty complex --blockchain --num-samples 100
+```
+
+Resume a previous run:
+```bash
+python main.py --resume ./output/gpt-4o/2025-01-15_10-30-45_simple_zero-shot
 ```
 
 When using OpenAI or ollama models, the `model-provider` must be set to `openai` or `ollama`, respectively.
 When using ollama, the specified model (e.g. `gemma3:4b`) must already be pulled to the local machine in advance.
-The `--single-sample` command is only for testing and ensures, that only the very first sample will be processed through the pipeline.
