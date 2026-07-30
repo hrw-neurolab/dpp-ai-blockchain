@@ -20,7 +20,7 @@
 
 <p align="center">
     <a href="https://github.com/hrw-neurolab/dpp-ai-blockchain/blob/master/LICENSE">
-        <img alt="license" src="https://img.shields.io/badge/LICENSE-Apache%202.0-blue">
+        <img alt="license" src="https://img.shields.io/badge/LICENSE-MIT-blue">
     </a>
     <a href="https://doi.org/10.1016/j.digbus.2026.100167">
         <img alt="arXiv" src="https://img.shields.io/badge/DOI-j.digbus.2026.100167-green">
