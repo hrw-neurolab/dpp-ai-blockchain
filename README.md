@@ -1,4 +1,36 @@
-# dpp-ai-blockchain
+<h1 align="center">LLM-based JSON mapping and blockchain integration for Digital Product Passports</h1>
+
+<p align="center">
+    <a href="https://scholar.google.com/citations?user=VmjTjOUAAAAJ">
+        D. Rohrschneider
+    </a>
+    *, 
+    <a href="https://www.linkedin.com/in/marcel-pehlke-5baa032b4">
+        M. Pehlke
+    </a>
+    , 
+    <a href="https://scholar.google.com/citations?user=-cQXDKAAAAAJ">
+        M. Jansen
+    </a>
+    , 
+    <a href="https://scholar.google.com/citations?user=kwlsSk4AAAAJ">
+        U. Handmann
+    </a>
+</p>
+
+<p align="center">
+    <a href="https://github.com/hrw-neurolab/dpp-ai-blockchain/blob/master/LICENSE">
+        <img alt="license" src="https://img.shields.io/badge/LICENSE-Apache%202.0-blue">
+    </a>
+    <a href="https://doi.org/10.1016/j.digbus.2026.100167">
+        <img alt="arXiv" src="https://img.shields.io/badge/DOI-j.digbus.2026.100167-green">
+    </a>
+    <a href="mailto:david.rohrschneider@hs-ruhrwest.de">
+        <img alt="Contact Us" src="https://img.shields.io/badge/Contact-Email-black">
+    </a>
+</p>
+
+This is the official codebase for our paper `LLM-based JSON mapping and blockchain integration for Digital Product Passports` [Digital Business].
 
 ## TL;DR
 
